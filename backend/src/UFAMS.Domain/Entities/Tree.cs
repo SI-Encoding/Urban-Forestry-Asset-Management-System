@@ -12,7 +12,7 @@ public class Tree : BaseEntity
 
     public Park Park { get; private set; }
 
-    public GeoCoordinate Center { get; private set; }
+    public GeoCoordinate Location { get; private set; }
 
     public TreeHealthStatus HealthStatus { get; private set; }
 
@@ -26,7 +26,7 @@ public class Tree : BaseEntity
         string assetTag,
         Species species,
         Park park,
-        GeoCoordinate center,
+        GeoCoordinate location,
         TreeHealthStatus healthStatus,
         DateOnly plantingDate,
         double heightInMeters,
@@ -36,7 +36,7 @@ public class Tree : BaseEntity
 
         Species = species ?? throw new ArgumentNullException(nameof(species));
         Park = park ?? throw new ArgumentNullException(nameof(park));
-        Center = center ?? throw new ArgumentNullException(nameof(center));
+        Location = location ?? throw new ArgumentNullException(nameof(location));
 
         HealthStatus = healthStatus;
         PlantingDate = ValidatePlantingDate(plantingDate);
@@ -64,10 +64,10 @@ public class Tree : BaseEntity
 
     public void Relocate(
         Park park,
-        GeoCoordinate center)
+        GeoCoordinate location)
     {
         Park = park ?? throw new ArgumentNullException(nameof(park));
-        Center = center ?? throw new ArgumentNullException(nameof(center));
+        Location = location ?? throw new ArgumentNullException(nameof(location));
 
         MarkUpdated();
     }
