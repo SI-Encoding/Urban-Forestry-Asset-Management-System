@@ -1,6 +1,6 @@
 namespace UFAMS.Domain.Enums;
 
-public enum HealthStatus
+public enum TreeHealthStatus
 {
     Excellent,
     Good,
