@@ -14,6 +14,7 @@ using UFAMS.Application.Features.Inspections.UpdateNotes;
 using UFAMS.Application.Features.Inspections.UpdateRecommendation;
 using UFAMS.Application.Features.Inspections.ScheduleFollowUp;
 using UFAMS.Application.Features.WorkOrders.CreateWorkOrder;
+using UFAMS.Application.Features.WorkOrders.GetTreeWorkOrders;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<UpdateInspectionRecommendationHandler>();
         services.AddScoped<ScheduleFollowUpHandler>();
         services.AddScoped<CreateWorkOrderHandler>();
+        services.AddScoped<GetTreeWorkOrdersHandler>();
         return services;
     }
 }

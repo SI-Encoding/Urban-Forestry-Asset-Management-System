@@ -1,4 +1,5 @@
 using UFAMS.Application.Features.WorkOrders.CreateWorkOrder;
+using UFAMS.Application.Features.WorkOrders.GetTreeWorkOrders;
 
 namespace UFAMS.Api.Endpoints;
 
@@ -23,6 +24,20 @@ public static class WorkOrderEndpoints
                 return Results.Created(
                     $"/work-orders/{response.Id}",
                     response);
+            });
+
+        app.MapGet(
+            "/trees/{treeId:guid}/work-orders",
+            async (
+                Guid treeId,
+                GetTreeWorkOrdersHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    new GetTreeWorkOrdersQuery(treeId),
+                    cancellationToken);
+
+                return Results.Ok(response);
             });
 
         return app;
