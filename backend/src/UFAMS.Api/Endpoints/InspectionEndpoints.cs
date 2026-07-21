@@ -1,4 +1,5 @@
 using UFAMS.Application.Features.Inspections.CreateInspection;
+using UFAMS.Application.Features.Inspections.GetInspection;
 using UFAMS.Application.Features.Inspections.GetTreeInspections;
 
 namespace UFAMS.Api.Endpoints;
@@ -41,6 +42,19 @@ public static class InspectionEndpoints
                 return Results.Ok(response);
             });
 
+        app.MapGet(
+            "/inspections/{id:guid}",
+            async (
+                Guid id,
+                GetInspectionHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    new GetInspectionQuery(id),
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
 
         return app;
     }
