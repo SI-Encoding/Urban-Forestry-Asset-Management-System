@@ -44,4 +44,5 @@ app.MapTreeEndpoints();
 app.MapSpeciesEndpoints();
 app.MapParkEndpoints();
 app.MapInspectionEndpoints();
+app.MapWorkOrderEndpoints();
 app.Run();

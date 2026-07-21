@@ -19,6 +19,10 @@ public class UFAMSDbContext : DbContext
 
     public DbSet<Inspection> Inspections => Set<Inspection>();
 
+    public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
+    
+    public DbSet<Employee> Employees => Set<Employee>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IParkRepository, ParkRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IInspectionRepository, InspectionRepository>();
+        services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
         return services;
     }
 }
