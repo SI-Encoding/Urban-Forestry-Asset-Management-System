@@ -8,9 +8,13 @@ public class Tree : BaseEntity
 {
     public string AssetTag { get; private set; }
 
-    public Species Species { get; private set; }
+    public Guid SpeciesId { get; private set; }
 
-    public Park Park { get; private set; }
+    public Species Species { get; private set; } = null!;
+
+    public Guid ParkId { get; private set; }
+
+    public Park Park { get; private set; } = null!;
 
     public GeoCoordinate Location { get; private set; }
 
@@ -22,6 +26,13 @@ public class Tree : BaseEntity
 
     public double DiameterInCentimeters { get; private set; }
 
+    private Tree()
+    {
+        AssetTag = null!;
+        Species = null!;
+        Park = null!;
+        Location = null!;
+    }
     public Tree(
         string assetTag,
         Species species,

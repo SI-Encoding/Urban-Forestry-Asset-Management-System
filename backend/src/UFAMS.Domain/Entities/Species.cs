@@ -12,6 +12,12 @@ public class Species : BaseEntity
 
     public string? Description { get; private set; }
 
+    private Species()
+    {
+        CommonName = null!;
+        ScientificName = null!;
+    }
+
     public Species(
         string commonName,
         string scientificName,

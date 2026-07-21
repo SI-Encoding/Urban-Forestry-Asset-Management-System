@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using UFAMS.Infrastructure.Persistence;
+using UFAMS.Application.Interfaces;
+using UFAMS.Infrastructure.Repositories;
 
 namespace UFAMS.Infrastructure;
 
@@ -14,6 +16,11 @@ public static class DependencyInjection
         services.AddDbContext<UFAMSDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddScoped<ITreeRepository, TreeRepository>();
+        services.AddScoped<ISpeciesRepository, SpeciesRepository>();
+        services.AddScoped<IParkRepository, ParkRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

@@ -13,6 +13,12 @@ public class Park : BaseEntity
 
     public bool IsActive { get; private set; }
 
+    private Park()
+    {
+        Name = null!;
+        Location = null!;
+    }
+    
     public Park(
         string name,
         GeoCoordinate location,
