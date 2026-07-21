@@ -1,4 +1,4 @@
-namespace UFAMS.Application.Trees.RegisterTree;
+namespace UFAMS.Application.Features.Trees.RegisterTree;
 
 public sealed class RegisterTreeValidator
 {

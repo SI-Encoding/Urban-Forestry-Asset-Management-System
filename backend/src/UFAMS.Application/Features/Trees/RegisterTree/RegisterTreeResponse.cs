@@ -1,7 +1,7 @@
 using UFAMS.Domain.Enums;
 using UFAMS.Domain.ValueObjects;
 
-namespace UFAMS.Application.Trees.RegisterTree;
+namespace UFAMS.Application.Features.Trees.RegisterTree;
 
 public record RegisterTreeResponse(
     Guid Id,

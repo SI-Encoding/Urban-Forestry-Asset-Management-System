@@ -22,4 +22,13 @@ public class SpeciesRepository : ISpeciesRepository
             s => s.Id == id,
             cancellationToken);
     }
+
+    public async Task<List<Species>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Species
+            .OrderBy(s => s.CommonName)
+            .ToListAsync(cancellationToken);
+    }
+
 }

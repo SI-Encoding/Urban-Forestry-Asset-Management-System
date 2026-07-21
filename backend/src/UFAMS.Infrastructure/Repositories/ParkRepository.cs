@@ -5,7 +5,7 @@ using UFAMS.Infrastructure.Persistence;
 
 namespace UFAMS.Infrastructure.Repositories;
 
-public class ParkRepository : IParkRepository
+public sealed class ParkRepository : IParkRepository
 {
     private readonly UFAMSDbContext _context;
 
@@ -18,8 +18,16 @@ public class ParkRepository : IParkRepository
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await _context.Parks.FirstOrDefaultAsync(
-            p => p.Id == id,
+        return await _context.Parks.FindAsync(
+            [id],
             cancellationToken);
+    }
+
+    public async Task<List<Park>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Parks
+            .OrderBy(p => p.Name)
+            .ToListAsync(cancellationToken);
     }
 }
