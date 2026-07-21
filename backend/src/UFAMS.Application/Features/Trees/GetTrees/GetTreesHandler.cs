@@ -16,7 +16,10 @@ public sealed class GetTreesHandler
         GetTreesQuery query,
         CancellationToken cancellationToken = default)
     {
-        var trees = await _treeRepository.GetAllAsync(
+        var trees = await _treeRepository.SearchAsync(
+            query.ParkId,
+            query.SpeciesId,
+            query.HealthStatus,
             cancellationToken);
 
         return trees
