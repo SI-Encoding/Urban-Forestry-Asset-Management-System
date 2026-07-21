@@ -4,6 +4,7 @@ using UFAMS.Application.Features.Species.GetSpecies;
 using UFAMS.Application.Features.Trees.GetTree;
 using UFAMS.Application.Features.Trees.GetTrees;
 using UFAMS.Application.Features.Trees.RegisterTree;
+using UFAMS.Application.Features.Trees.UpdateMeasurements;
 
 namespace UFAMS.Application;
 
@@ -17,7 +18,7 @@ public static class DependencyInjection
         services.AddScoped<GetTreeHandler>();
         services.AddScoped<GetSpeciesHandler>();
         services.AddScoped<GetParksHandler>();
-
+        services.AddScoped<UpdateTreeMeasurementsHandler>();
         return services;
     }
 }

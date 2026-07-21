@@ -1,6 +1,7 @@
 using UFAMS.Application.Features.Trees.RegisterTree;
 using UFAMS.Application.Features.Trees.GetTrees;
 using UFAMS.Application.Features.Trees.GetTree;
+using UFAMS.Application.Features.Trees.UpdateMeasurements;
 namespace UFAMS.Api.Endpoints;
 
 public static class TreeEndpoints
@@ -46,6 +47,22 @@ public static class TreeEndpoints
             {
                 var response = await handler.Handle(
                     new GetTreeQuery(id),
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapPut(
+            "/trees/{id:guid}/measurements",
+            async (
+                Guid id,
+                UpdateTreeMeasurementsCommand command,
+                UpdateTreeMeasurementsHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    id,
+                    command,
                     cancellationToken);
 
                 return Results.Ok(response);
