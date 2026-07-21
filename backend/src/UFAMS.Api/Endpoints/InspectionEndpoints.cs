@@ -3,6 +3,7 @@ using UFAMS.Application.Features.Inspections.GetInspection;
 using UFAMS.Application.Features.Inspections.GetTreeInspections;
 using UFAMS.Application.Features.Inspections.UpdateNotes;
 using UFAMS.Application.Features.Inspections.UpdateRecommendation;
+using UFAMS.Application.Features.Inspections.ScheduleFollowUp;
 namespace UFAMS.Api.Endpoints;
 
 public static class InspectionEndpoints
@@ -79,6 +80,22 @@ public static class InspectionEndpoints
                 Guid id,
                 UpdateInspectionRecommendationCommand command,
                 UpdateInspectionRecommendationHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    id,
+                    command,
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapPut(
+            "/inspections/{id:guid}/follow-up",
+            async (
+                Guid id,
+                ScheduleFollowUpCommand command,
+                ScheduleFollowUpHandler handler,
                 CancellationToken cancellationToken) =>
             {
                 var response = await handler.Handle(
