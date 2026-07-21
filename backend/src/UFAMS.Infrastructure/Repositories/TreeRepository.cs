@@ -26,6 +26,16 @@ public class TreeRepository : ITreeRepository
                 cancellationToken);
     }
 
+    public async Task<List<Tree>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Trees
+            .Include(t => t.Species)
+            .Include(t => t.Park)
+            .OrderBy(t => t.AssetTag)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(
         Tree tree,
         CancellationToken cancellationToken = default)

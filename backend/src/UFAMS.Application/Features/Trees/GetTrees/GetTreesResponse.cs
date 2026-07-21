@@ -1,9 +1,9 @@
-using UFAMS.Domain.Enums;
 using UFAMS.Domain.ValueObjects;
+using UFAMS.Domain.Enums;
 
-namespace UFAMS.Application.Features.Trees.GetTree;
+namespace UFAMS.Application.Features.Trees.GetTrees;
 
-public sealed record GetTreeResponse(
+public sealed record GetTreesResponse(
     Guid Id,
     string AssetTag,
     string SpeciesName,
