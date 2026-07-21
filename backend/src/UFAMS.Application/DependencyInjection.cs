@@ -11,6 +11,7 @@ using UFAMS.Application.Features.Inspections.CreateInspection;
 using UFAMS.Application.Features.Inspections.GetTreeInspections;
 using UFAMS.Application.Features.Inspections.GetInspection;
 using UFAMS.Application.Features.Inspections.UpdateNotes;
+using UFAMS.Application.Features.Inspections.UpdateRecommendation;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<GetTreeInspectionsHandler>();
         services.AddScoped<GetInspectionHandler>();
         services.AddScoped<UpdateInspectionNotesHandler>();
+        services.AddScoped<UpdateInspectionRecommendationHandler>();
         return services;
     }
 }

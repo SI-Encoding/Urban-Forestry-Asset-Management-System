@@ -2,6 +2,7 @@ using UFAMS.Application.Features.Inspections.CreateInspection;
 using UFAMS.Application.Features.Inspections.GetInspection;
 using UFAMS.Application.Features.Inspections.GetTreeInspections;
 using UFAMS.Application.Features.Inspections.UpdateNotes;
+using UFAMS.Application.Features.Inspections.UpdateRecommendation;
 namespace UFAMS.Api.Endpoints;
 
 public static class InspectionEndpoints
@@ -71,7 +72,23 @@ public static class InspectionEndpoints
 
                 return Results.Ok(response);
             });
-            
+
+        app.MapPut(
+            "/inspections/{id:guid}/recommendation",
+            async (
+                Guid id,
+                UpdateInspectionRecommendationCommand command,
+                UpdateInspectionRecommendationHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    id,
+                    command,
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
+
         return app;
     }
 }
