@@ -7,6 +7,8 @@ using UFAMS.Application.Features.Trees.RegisterTree;
 using UFAMS.Application.Features.Trees.UpdateMeasurements;
 using UFAMS.Application.Features.Trees.RelocateTree;
 using UFAMS.Application.Features.Trees.UpdateHealth;
+using UFAMS.Application.Features.Inspections.CreateInspection;
+using UFAMS.Application.Features.Inspections.GetTreeInspections;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -22,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<UpdateTreeMeasurementsHandler>();
         services.AddScoped<RelocateTreeHandler>();
         services.AddScoped<UpdateTreeHealthHandler>();
+        services.AddScoped<CreateInspectionHandler>();
+        services.AddScoped<GetTreeInspectionsHandler>();
         return services;
     }
 }

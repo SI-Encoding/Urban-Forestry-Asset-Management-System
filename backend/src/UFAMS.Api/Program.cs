@@ -43,4 +43,5 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapTreeEndpoints();
 app.MapSpeciesEndpoints();
 app.MapParkEndpoints();
+app.MapInspectionEndpoints();
 app.Run();

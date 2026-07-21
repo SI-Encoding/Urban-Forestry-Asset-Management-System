@@ -26,6 +26,11 @@ public class Tree : BaseEntity
 
     public double DiameterInCentimeters { get; private set; }
 
+    private readonly List<Inspection> _inspections = new();
+
+    public IReadOnlyCollection<Inspection> Inspections =>
+        _inspections.AsReadOnly();
+        
     private Tree()
     {
         AssetTag = null!;
