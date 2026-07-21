@@ -3,6 +3,7 @@ using UFAMS.Application.Features.Trees.GetTrees;
 using UFAMS.Application.Features.Trees.GetTree;
 using UFAMS.Application.Features.Trees.UpdateMeasurements;
 using UFAMS.Application.Features.Trees.RelocateTree;
+using UFAMS.Application.Features.Trees.UpdateHealth;
 namespace UFAMS.Api.Endpoints;
 
 public static class TreeEndpoints
@@ -75,6 +76,22 @@ public static class TreeEndpoints
                 Guid id,
                 RelocateTreeCommand command,
                 RelocateTreeHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    id,
+                    command,
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapPut(
+            "/trees/{id:guid}/health",
+            async (
+                Guid id,
+                UpdateTreeHealthCommand command,
+                UpdateTreeHealthHandler handler,
                 CancellationToken cancellationToken) =>
             {
                 var response = await handler.Handle(

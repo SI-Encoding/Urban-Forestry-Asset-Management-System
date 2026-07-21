@@ -6,6 +6,7 @@ using UFAMS.Application.Features.Trees.GetTrees;
 using UFAMS.Application.Features.Trees.RegisterTree;
 using UFAMS.Application.Features.Trees.UpdateMeasurements;
 using UFAMS.Application.Features.Trees.RelocateTree;
+using UFAMS.Application.Features.Trees.UpdateHealth;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<GetParksHandler>();
         services.AddScoped<UpdateTreeMeasurementsHandler>();
         services.AddScoped<RelocateTreeHandler>();
+        services.AddScoped<UpdateTreeHealthHandler>();
         return services;
     }
 }
