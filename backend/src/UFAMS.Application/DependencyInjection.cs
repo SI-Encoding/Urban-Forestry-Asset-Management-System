@@ -17,6 +17,9 @@ using UFAMS.Application.Features.WorkOrders.CreateWorkOrder;
 using UFAMS.Application.Features.WorkOrders.GetTreeWorkOrders;
 using UFAMS.Application.Features.WorkOrders.AssignWorkOrder;
 using UFAMS.Application.Features.WorkOrders.GetWorkOrder;
+using UFAMS.Application.Features.WorkOrders.StartWorkOrder;
+using UFAMS.Application.Features.WorkOrders.CompleteWorkOrder;
+using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -42,6 +45,9 @@ public static class DependencyInjection
         services.AddScoped<GetTreeWorkOrdersHandler>();
         services.AddScoped<AssignWorkOrderHandler>();
         services.AddScoped<GetWorkOrderHandler>();
+        services.AddScoped<StartWorkOrderHandler>();
+        services.AddScoped<CompleteWorkOrderHandler>();
+        services.AddScoped<CancelWorkOrderHandler>();
         return services;
     }
 }

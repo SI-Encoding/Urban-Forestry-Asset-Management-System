@@ -1,7 +1,10 @@
 using UFAMS.Application.Features.WorkOrders.AssignWorkOrder;
+using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
+using UFAMS.Application.Features.WorkOrders.CompleteWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CreateWorkOrder;
 using UFAMS.Application.Features.WorkOrders.GetTreeWorkOrders;
 using UFAMS.Application.Features.WorkOrders.GetWorkOrder;
+using UFAMS.Application.Features.WorkOrders.StartWorkOrder;
 
 namespace UFAMS.Api.Endpoints;
 
@@ -68,6 +71,51 @@ public static class WorkOrderEndpoints
                 var response = await handler.Handle(
                     new GetWorkOrderQuery(id),
                     cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapPut(
+            "/work-orders/{id:guid}/start",
+            async (
+                Guid id,
+                StartWorkOrderHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response =
+                    await handler.Handle(
+                        id,
+                        cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapPut(
+            "/work-orders/{id:guid}/complete",
+            async (
+                Guid id,
+                CompleteWorkOrderHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response =
+                    await handler.Handle(
+                        id,
+                        cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapPut(
+            "/work-orders/{id:guid}/cancel",
+            async (
+                Guid id,
+                CancelWorkOrderHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response =
+                    await handler.Handle(
+                        id,
+                        cancellationToken);
 
                 return Results.Ok(response);
             });
