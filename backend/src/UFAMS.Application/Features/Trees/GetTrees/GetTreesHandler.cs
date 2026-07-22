@@ -20,6 +20,10 @@ public sealed class GetTreesHandler
             query.ParkId,
             query.SpeciesId,
             query.HealthStatus,
+            null,
+            null,
+            null,
+            null,
             cancellationToken);
 
         return trees

@@ -20,6 +20,7 @@ using UFAMS.Application.Features.WorkOrders.GetWorkOrder;
 using UFAMS.Application.Features.WorkOrders.StartWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CompleteWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
+using UFAMS.Application.Features.Trees.SearchTrees;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<StartWorkOrderHandler>();
         services.AddScoped<CompleteWorkOrderHandler>();
         services.AddScoped<CancelWorkOrderHandler>();
+        services.AddScoped<SearchTreesHandler>();
         return services;
     }
 }

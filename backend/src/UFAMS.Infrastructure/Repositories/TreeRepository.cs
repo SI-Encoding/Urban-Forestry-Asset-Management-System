@@ -41,26 +41,56 @@ public class TreeRepository : ITreeRepository
         Guid? parkId,
         Guid? speciesId,
         TreeHealthStatus? healthStatus,
+        double? minLatitude,
+        double? maxLatitude,
+        double? minLongitude,
+        double? maxLongitude,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Trees
+        IQueryable<Tree> query = _context.Trees
             .Include(t => t.Species)
-            .Include(t => t.Park)
-            .AsQueryable();
+            .Include(t => t.Park);
 
         if (parkId.HasValue)
         {
-            query = query.Where(t => t.Park.Id == parkId.Value);
+            query = query.Where(
+                t => t.Park.Id == parkId.Value);
         }
 
         if (speciesId.HasValue)
         {
-            query = query.Where(t => t.Species.Id == speciesId.Value);
+            query = query.Where(
+                t => t.Species.Id == speciesId.Value);
         }
 
         if (healthStatus.HasValue)
         {
-            query = query.Where(t => t.HealthStatus == healthStatus.Value);
+            query = query.Where(
+                t => t.HealthStatus == healthStatus.Value);
+        }
+
+        if (minLatitude.HasValue)
+        {
+            query = query.Where(
+                t => t.Location.Latitude >= minLatitude.Value);
+        }
+
+        if (maxLatitude.HasValue)
+        {
+            query = query.Where(
+                t => t.Location.Latitude <= maxLatitude.Value);
+        }
+
+        if (minLongitude.HasValue)
+        {
+            query = query.Where(
+                t => t.Location.Longitude >= minLongitude.Value);
+        }
+
+        if (maxLongitude.HasValue)
+        {
+            query = query.Where(
+                t => t.Location.Longitude <= maxLongitude.Value);
         }
 
         return await query

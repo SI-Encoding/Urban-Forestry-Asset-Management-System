@@ -4,6 +4,7 @@ using UFAMS.Application.Features.Trees.GetTree;
 using UFAMS.Application.Features.Trees.UpdateMeasurements;
 using UFAMS.Application.Features.Trees.RelocateTree;
 using UFAMS.Application.Features.Trees.UpdateHealth;
+using UFAMS.Application.Features.Trees.SearchTrees;
 using UFAMS.Domain.Enums;
 namespace UFAMS.Api.Endpoints;
 
@@ -106,6 +107,33 @@ public static class TreeEndpoints
                 var response = await handler.Handle(
                     id,
                     command,
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
+
+        app.MapGet(
+            "/trees/search",
+            async (
+                Guid? parkId,
+                Guid? speciesId,
+                TreeHealthStatus? healthStatus,
+                double? minLatitude,
+                double? maxLatitude,
+                double? minLongitude,
+                double? maxLongitude,
+                SearchTreesHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    new SearchTreesQuery(
+                        parkId,
+                        speciesId,
+                        healthStatus,
+                        minLatitude,
+                        maxLatitude,
+                        minLongitude,
+                        maxLongitude),
                     cancellationToken);
 
                 return Results.Ok(response);

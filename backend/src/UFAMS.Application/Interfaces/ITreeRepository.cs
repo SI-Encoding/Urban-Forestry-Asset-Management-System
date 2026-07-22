@@ -16,6 +16,10 @@ public interface ITreeRepository
         Guid? parkId,
         Guid? speciesId,
         TreeHealthStatus? healthStatus,
+        double? minLatitude,
+        double? maxLatitude,
+        double? minLongitude,
+        double? maxLongitude,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(
