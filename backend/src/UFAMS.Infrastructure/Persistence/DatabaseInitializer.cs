@@ -42,6 +42,19 @@ public static class DatabaseInitializer
                     52));
         }
 
+        if (!context.Employees.Any())
+        {
+            context.Employees.Add(
+                new Employee(
+                    "John Smith",
+                    "Arborist"));
+
+            context.Employees.Add(
+                new Employee(
+                    "Sarah Johnson",
+                    "Tree Technician"));
+        }
+
         await context.SaveChangesAsync();
     }
 }
