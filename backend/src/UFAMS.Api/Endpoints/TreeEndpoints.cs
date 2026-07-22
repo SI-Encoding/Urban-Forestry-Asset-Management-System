@@ -6,6 +6,7 @@ using UFAMS.Application.Features.Trees.RelocateTree;
 using UFAMS.Application.Features.Trees.UpdateHealth;
 using UFAMS.Application.Features.Trees.SearchTrees;
 using UFAMS.Application.Features.Trees.ExportTreesGeoJson;
+using UFAMS.Application.Features.Trees.FindNearbyTrees;
 using UFAMS.Domain.Enums;
 namespace UFAMS.Api.Endpoints;
 
@@ -143,16 +144,59 @@ public static class TreeEndpoints
         app.MapGet(
             "/trees/geojson",
             async (
+                Guid? parkId,
+                Guid? speciesId,
+                TreeHealthStatus? healthStatus,
+                double? minLatitude,
+                double? maxLatitude,
+                double? minLongitude,
+                double? maxLongitude,
                 ExportTreesGeoJsonHandler handler,
                 CancellationToken cancellationToken) =>
             {
                 var response = await handler.Handle(
-                    new ExportTreesGeoJsonQuery(),
+                    new ExportTreesGeoJsonQuery(
+                        parkId,
+                        speciesId,
+                        healthStatus,
+                        minLatitude,
+                        maxLatitude,
+                        minLongitude,
+                        maxLongitude),
                     cancellationToken);
 
                 return Results.Ok(response);
             });
-            
+
+        app.MapGet(
+            "/trees/nearby",
+            async (
+                double latitude,
+                double longitude,
+                double radiusMeters,
+                FindNearbyTreesHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var response = await handler.Handle(
+                        new FindNearbyTreesQuery(
+                            latitude,
+                            longitude,
+                            radiusMeters),
+                        cancellationToken);
+
+                    return Results.Ok(response);
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.BadRequest(new
+                    {
+                        message = ex.Message
+                    });
+                }
+            });
+
         return app;
     }
 }

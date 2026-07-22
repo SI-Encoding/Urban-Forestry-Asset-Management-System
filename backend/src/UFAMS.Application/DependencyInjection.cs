@@ -22,6 +22,7 @@ using UFAMS.Application.Features.WorkOrders.CompleteWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
 using UFAMS.Application.Features.Trees.SearchTrees;
 using UFAMS.Application.Features.Trees.ExportTreesGeoJson;
+using UFAMS.Application.Features.Trees.FindNearbyTrees;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -52,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<CancelWorkOrderHandler>();
         services.AddScoped<SearchTreesHandler>();
         services.AddScoped<ExportTreesGeoJsonHandler>();
+        services.AddScoped<FindNearbyTreesHandler>();
         return services;
     }
 }

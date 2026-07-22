@@ -17,7 +17,14 @@ public sealed class ExportTreesGeoJsonHandler
         ExportTreesGeoJsonQuery query,
         CancellationToken cancellationToken = default)
     {
-        var trees = await _treeRepository.GetAllAsync(
+        var trees = await _treeRepository.SearchAsync(
+            query.ParkId,
+            query.SpeciesId,
+            query.HealthStatus,
+            query.MinLatitude,
+            query.MaxLatitude,
+            query.MinLongitude,
+            query.MaxLongitude,
             cancellationToken);
 
         var features = trees
