@@ -5,6 +5,7 @@ using UFAMS.Application.Features.Trees.UpdateMeasurements;
 using UFAMS.Application.Features.Trees.RelocateTree;
 using UFAMS.Application.Features.Trees.UpdateHealth;
 using UFAMS.Application.Features.Trees.SearchTrees;
+using UFAMS.Application.Features.Trees.ExportTreesGeoJson;
 using UFAMS.Domain.Enums;
 namespace UFAMS.Api.Endpoints;
 
@@ -139,6 +140,19 @@ public static class TreeEndpoints
                 return Results.Ok(response);
             });
 
+        app.MapGet(
+            "/trees/geojson",
+            async (
+                ExportTreesGeoJsonHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    new ExportTreesGeoJsonQuery(),
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
+            
         return app;
     }
 }
