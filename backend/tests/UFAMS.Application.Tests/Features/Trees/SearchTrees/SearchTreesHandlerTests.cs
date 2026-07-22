@@ -64,35 +64,92 @@ public class SearchTreesHandlerTests
         result[1].AssetTag.Should().Be("TREE-002");
     }
 
-    private static Tree CreateTree(
-        string assetTag,
-        string speciesName,
-        string parkName)
+    [Fact]
+    public async Task Handle_WithFilters_PassesFiltersToRepository()
     {
-        var species =
-            new Species(
-                speciesName,
-                speciesName,
-                true);
+        // Arrange
+        var repository = new Mock<ITreeRepository>();
 
-        var park =
-            new Park(
-                parkName,
-                new GeoCoordinate(
-                    49.0,
-                    -123.0),
-                100);
+        repository
+            .Setup(r => r.SearchAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<TreeHealthStatus?>(),
+                It.IsAny<double?>(),
+                It.IsAny<double?>(),
+                It.IsAny<double?>(),
+                It.IsAny<double?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Tree>());
 
-        return new Tree(
-            assetTag,
-            species,
-            park,
-            new GeoCoordinate(
-                49.1,
-                -123.1),
-            TreeHealthStatus.Good,
-            new DateOnly(2020, 1, 1),
-            12,
-            30);
+        var handler =
+            new SearchTreesHandler(repository.Object);
+
+        var parkId = Guid.NewGuid();
+
+        var query =
+            new SearchTreesQuery(
+                parkId,
+                null,
+                TreeHealthStatus.Good,
+                49.0,
+                50.0,
+                -124.0,
+                -123.0);
+
+        // Act
+        await handler.Handle(query);
+
+        // Assert
+        repository.Verify(r =>
+            r.SearchAsync(
+                parkId,
+                null,
+                TreeHealthStatus.Good,
+                49.0,
+                50.0,
+                -124.0,
+                -123.0,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRepositoryReturnsNoTrees_ReturnsEmptyList()
+    {
+        // Arrange
+        var repository = new Mock<ITreeRepository>();
+
+        repository
+            .Setup(r => r.SearchAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<TreeHealthStatus?>(),
+                It.IsAny<double?>(),
+                It.IsAny<double?>(),
+                It.IsAny<double?>(),
+                It.IsAny<double?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Tree>());
+
+        var handler =
+            new SearchTreesHandler(repository.Object);
+
+        var query =
+            new SearchTreesQuery(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        // Act
+        var result =
+            await handler.Handle(query);
+
+        // Assert
+        result.Should().BeEmpty();
     }
 }

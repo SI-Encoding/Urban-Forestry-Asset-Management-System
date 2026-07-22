@@ -45,4 +45,36 @@ public static class TestDataFactory
             12,
             30);
     }
+
+    public static Employee CreateEmployee(
+        string name = "John Smith",
+        string role = "Arborist")
+    {
+        return new Employee(
+            name,
+            role);
+    }
+
+    public static Inspection CreateInspection(
+        Tree? tree = null)
+    {
+        return new Inspection(
+            tree?.Id ?? Guid.NewGuid(),
+            new DateOnly(2026, 1, 1),
+            TreeHealthStatus.Good,
+            "Initial inspection notes",
+            "Continue monitoring",
+            null);
+    }
+
+    public static WorkOrder CreateWorkOrder(
+        Tree? tree = null)
+    {
+        return new WorkOrder(
+            tree ?? CreateTree(),
+            "Prune branches",
+            null);
+    }
+
+    
 }
