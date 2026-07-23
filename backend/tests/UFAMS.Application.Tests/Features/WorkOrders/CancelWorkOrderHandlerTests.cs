@@ -1,18 +1,18 @@
 using FluentAssertions;
 using Moq;
 using UFAMS.Application.Common.Exceptions;
-using UFAMS.Application.Features.WorkOrders.AssignWorkOrder;
+using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
 using UFAMS.Application.Interfaces;
 using UFAMS.Application.Tests.Common;
 using UFAMS.Domain.Entities;
 using UFAMS.Domain.Enums;
 
-namespace UFAMS.Application.Tests.Features.WorkOrders.AssignWorkOrder;
+namespace UFAMS.Application.Tests.Features.WorkOrders.CancelWorkOrder;
 
-public class AssignWorkOrderHandlerTests
+public class CancelWorkOrderHandlerTests
 {
     [Fact]
-    public async Task Handle_WithValidEmployee_AssignsWorkOrder()
+    public async Task Handle_WithOpenWorkOrder_CancelsWorkOrder()
     {
         // Arrange
         var tree =
@@ -21,56 +21,36 @@ public class AssignWorkOrderHandlerTests
         var workOrder =
             new WorkOrder(
                 tree,
-                "Remove damaged branches",
+                "Prune branches",
                 DateOnly.FromDateTime(
                     DateTime.UtcNow.AddDays(30)));
 
-        var employee =
-            new Employee(
-                "John Smith",
-                "Arborist");
-
-        var workOrderRepository =
+        var repository =
             new Mock<IWorkOrderRepository>();
 
-        workOrderRepository
+        repository
             .Setup(r => r.GetByIdAsync(
                 workOrder.Id,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(workOrder);
 
-        var employeeRepository =
-            new Mock<IEmployeeRepository>();
-
-        employeeRepository
-            .Setup(r => r.GetByIdAsync(
-                employee.Id,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(employee);
-
         var unitOfWork =
             new Mock<IUnitOfWork>();
 
         var handler =
-            new AssignWorkOrderHandler(
-                workOrderRepository.Object,
-                employeeRepository.Object,
+            new CancelWorkOrderHandler(
+                repository.Object,
                 unitOfWork.Object);
 
         // Act
         var result =
-            await handler.Handle(
-                workOrder.Id,
-                new AssignWorkOrderCommand(employee.Id));
+            await handler.Handle(workOrder.Id);
 
         // Assert
-        result.AssignedEmployeeId
-            .Should()
-            .Be(employee.Id);
+        result.Id.Should().Be(workOrder.Id);
 
-        result.Status
-            .Should()
-            .Be(WorkOrderStatus.Assigned);
+        result.Status.Should()
+            .Be(WorkOrderStatus.Cancelled);
 
         unitOfWork.Verify(u =>
             u.SaveChangesAsync(
@@ -82,32 +62,26 @@ public class AssignWorkOrderHandlerTests
     public async Task Handle_WhenWorkOrderDoesNotExist_ThrowsNotFoundException()
     {
         // Arrange
-        var workOrderRepository =
+        var repository =
             new Mock<IWorkOrderRepository>();
 
-        workOrderRepository
+        repository
             .Setup(r => r.GetByIdAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((WorkOrder?)null);
 
-        var employeeRepository =
-            new Mock<IEmployeeRepository>();
-
         var unitOfWork =
             new Mock<IUnitOfWork>();
 
         var handler =
-            new AssignWorkOrderHandler(
-                workOrderRepository.Object,
-                employeeRepository.Object,
+            new CancelWorkOrderHandler(
+                repository.Object,
                 unitOfWork.Object);
 
         // Act
         Func<Task> action = async () =>
-            await handler.Handle(
-                Guid.NewGuid(),
-                new AssignWorkOrderCommand(Guid.NewGuid()));
+            await handler.Handle(Guid.NewGuid());
 
         // Assert
         await action.Should()
@@ -120,61 +94,56 @@ public class AssignWorkOrderHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
+    public async Task Handle_WhenWorkOrderIsCompleted_ThrowsInvalidOperationException()
     {
         // Arrange
         var tree =
             TestDataFactory.CreateTree();
 
+        var employee =
+            new Employee(
+                "John Smith",
+                "Arborist");
+
         var workOrder =
             new WorkOrder(
                 tree,
-                "Remove damaged branches",
+                "Prune branches",
                 DateOnly.FromDateTime(
                     DateTime.UtcNow.AddDays(30)));
 
-        var workOrderRepository =
+        workOrder.AssignEmployee(employee);
+        workOrder.Start();
+        workOrder.Complete();
+
+        var repository =
             new Mock<IWorkOrderRepository>();
 
-        workOrderRepository
+        repository
             .Setup(r => r.GetByIdAsync(
                 workOrder.Id,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(workOrder);
 
-        var employeeRepository =
-            new Mock<IEmployeeRepository>();
-
-        employeeRepository
-            .Setup(r => r.GetByIdAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Employee?)null);
-
         var unitOfWork =
             new Mock<IUnitOfWork>();
 
         var handler =
-            new AssignWorkOrderHandler(
-                workOrderRepository.Object,
-                employeeRepository.Object,
+            new CancelWorkOrderHandler(
+                repository.Object,
                 unitOfWork.Object);
 
         // Act
         Func<Task> action = async () =>
-            await handler.Handle(
-                workOrder.Id,
-                new AssignWorkOrderCommand(Guid.NewGuid()));
+            await handler.Handle(workOrder.Id);
 
         // Assert
         await action.Should()
-            .ThrowAsync<NotFoundException>();
+            .ThrowAsync<InvalidOperationException>();
 
         unitOfWork.Verify(u =>
             u.SaveChangesAsync(
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }
-
-    
 }
