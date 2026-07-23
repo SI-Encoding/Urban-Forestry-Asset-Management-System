@@ -1,30 +1,29 @@
 using FluentAssertions;
 using Moq;
 using UFAMS.Application.Common.Exceptions;
-using UFAMS.Application.Features.Inspections.UpdateNotes;
+using UFAMS.Application.Features.Inspections.ScheduleFollowUp;
 using UFAMS.Application.Interfaces;
 using UFAMS.Application.Tests.Common;
 using UFAMS.Domain.Entities;
 using UFAMS.Domain.Enums;
 
-namespace UFAMS.Application.Tests.Features.Inspections.UpdateNotes;
+namespace UFAMS.Application.Tests.Features.Inspections.ScheduleFollowUp;
 
-public class UpdateInspectionNotesHandlerTests
+public class ScheduleFollowUpHandlerTests
 {
     [Fact]
-    public async Task Handle_WithExistingInspection_UpdatesNotes()
+    public async Task Handle_WithExistingInspection_UpdatesFollowUpDate()
     {
         // Arrange
         var tree =
             TestDataFactory.CreateTree();
-
 
         var inspection =
             new Inspection(
                 tree.Id,
                 new DateOnly(2025, 1, 1),
                 TreeHealthStatus.Good,
-                "Old notes",
+                "Inspection notes",
                 "Monitor tree",
                 null);
 
@@ -44,14 +43,18 @@ public class UpdateInspectionNotesHandlerTests
 
 
         var handler =
-            new UpdateInspectionNotesHandler(
+            new ScheduleFollowUpHandler(
                 repository.Object,
                 unitOfWork.Object);
 
 
+        var nextInspectionDate =
+            new DateOnly(2026, 1, 1);
+
+
         var command =
-            new UpdateInspectionNotesCommand(
-                "Updated inspection notes");
+            new ScheduleFollowUpCommand(
+                nextInspectionDate);
 
 
         // Act
@@ -70,14 +73,14 @@ public class UpdateInspectionNotesHandlerTests
             .Should()
             .Be(tree.Id);
 
-        result.Notes
+        result.NextInspectionDate
             .Should()
-            .Be("Updated inspection notes");
+            .Be(nextInspectionDate);
 
 
-        inspection.Notes
+        inspection.NextInspectionDate
             .Should()
-            .Be("Updated inspection notes");
+            .Be(nextInspectionDate);
 
 
         unitOfWork.Verify(u =>
@@ -110,14 +113,14 @@ public class UpdateInspectionNotesHandlerTests
 
 
         var handler =
-            new UpdateInspectionNotesHandler(
+            new ScheduleFollowUpHandler(
                 repository.Object,
                 unitOfWork.Object);
 
 
         var command =
-            new UpdateInspectionNotesCommand(
-                "Updated notes");
+            new ScheduleFollowUpCommand(
+                new DateOnly(2026, 1, 1));
 
 
         // Act

@@ -1,18 +1,18 @@
 using FluentAssertions;
 using Moq;
 using UFAMS.Application.Common.Exceptions;
-using UFAMS.Application.Features.Inspections.UpdateNotes;
+using UFAMS.Application.Features.Inspections.UpdateRecommendation;
 using UFAMS.Application.Interfaces;
 using UFAMS.Application.Tests.Common;
 using UFAMS.Domain.Entities;
 using UFAMS.Domain.Enums;
 
-namespace UFAMS.Application.Tests.Features.Inspections.UpdateNotes;
+namespace UFAMS.Application.Tests.Features.Inspections.UpdateRecommendation;
 
-public class UpdateInspectionNotesHandlerTests
+public class UpdateInspectionRecommendationHandlerTests
 {
     [Fact]
-    public async Task Handle_WithExistingInspection_UpdatesNotes()
+    public async Task Handle_WithExistingInspection_UpdatesRecommendation()
     {
         // Arrange
         var tree =
@@ -24,8 +24,8 @@ public class UpdateInspectionNotesHandlerTests
                 tree.Id,
                 new DateOnly(2025, 1, 1),
                 TreeHealthStatus.Good,
-                "Old notes",
-                "Monitor tree",
+                "Inspection notes",
+                "Old recommendation",
                 null);
 
 
@@ -44,14 +44,14 @@ public class UpdateInspectionNotesHandlerTests
 
 
         var handler =
-            new UpdateInspectionNotesHandler(
+            new UpdateInspectionRecommendationHandler(
                 repository.Object,
                 unitOfWork.Object);
 
 
         var command =
-            new UpdateInspectionNotesCommand(
-                "Updated inspection notes");
+            new UpdateInspectionRecommendationCommand(
+                "Prune branches next season");
 
 
         // Act
@@ -70,14 +70,14 @@ public class UpdateInspectionNotesHandlerTests
             .Should()
             .Be(tree.Id);
 
-        result.Notes
+        result.Recommendation
             .Should()
-            .Be("Updated inspection notes");
+            .Be("Prune branches next season");
 
 
-        inspection.Notes
+        inspection.Recommendation
             .Should()
-            .Be("Updated inspection notes");
+            .Be("Prune branches next season");
 
 
         unitOfWork.Verify(u =>
@@ -110,14 +110,14 @@ public class UpdateInspectionNotesHandlerTests
 
 
         var handler =
-            new UpdateInspectionNotesHandler(
+            new UpdateInspectionRecommendationHandler(
                 repository.Object,
                 unitOfWork.Object);
 
 
         var command =
-            new UpdateInspectionNotesCommand(
-                "Updated notes");
+            new UpdateInspectionRecommendationCommand(
+                "New recommendation");
 
 
         // Act
