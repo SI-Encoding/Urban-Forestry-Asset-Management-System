@@ -12,12 +12,10 @@ public class CustomWebApplicationFactory
     private readonly string _databaseName =
         Guid.NewGuid().ToString();
 
-
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-
 
         builder.ConfigureServices(services =>
         {
@@ -27,12 +25,10 @@ public class CustomWebApplicationFactory
                     d.ServiceType ==
                     typeof(DbContextOptions<UFAMSDbContext>));
 
-
             if (descriptor != null)
             {
                 services.Remove(descriptor);
             }
-
 
             services.AddDbContext<UFAMSDbContext>(
                 options =>
@@ -43,18 +39,15 @@ public class CustomWebApplicationFactory
         });
     }
 
-
     public Guid GetSpeciesId(
         string commonName)
     {
         using var scope =
             Services.CreateScope();
 
-
         var db =
             scope.ServiceProvider
                 .GetRequiredService<UFAMSDbContext>();
-
 
         return db.Species
             .First(s =>
@@ -62,18 +55,15 @@ public class CustomWebApplicationFactory
             .Id;
     }
 
-
     public Guid GetParkId(
         string name)
     {
         using var scope =
             Services.CreateScope();
 
-
         var db =
             scope.ServiceProvider
                 .GetRequiredService<UFAMSDbContext>();
-
 
         return db.Parks
             .First(p =>
@@ -81,20 +71,31 @@ public class CustomWebApplicationFactory
             .Id;
     }
 
+    public Guid GetEmployeeId(
+        string name)
+    {
+        using var scope =
+            Services.CreateScope();
+
+        var db =
+            scope.ServiceProvider
+                .GetRequiredService<UFAMSDbContext>();
+
+        return db.Employees
+            .First(e => e.Name == name)
+            .Id;
+    }
 
     public void SeedDatabase()
     {
         using var scope =
             Services.CreateScope();
 
-
         var db =
             scope.ServiceProvider
                 .GetRequiredService<UFAMSDbContext>();
 
-
         db.Database.EnsureCreated();
-
 
         DatabaseInitializer
             .SeedAsync(db)
