@@ -31,15 +31,17 @@ public static class TestDataFactory
         string assetTag = "TREE-001",
         TreeHealthStatus health = TreeHealthStatus.Good,
         string speciesName = "Douglas Fir",
-        string parkName = "Stanley Park")
+        string parkName = "Stanley Park",
+        double latitude = 49.3043,
+        double longitude = -123.1443)
     {
         return new Tree(
             assetTag,
             CreateSpecies(speciesName),
             CreatePark(parkName),
             new GeoCoordinate(
-                49.3043,
-                -123.1443),
+                latitude,
+                longitude),
             health,
             new DateOnly(2020, 1, 1),
             12,
