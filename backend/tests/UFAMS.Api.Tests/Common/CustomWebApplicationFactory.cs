@@ -9,9 +9,6 @@ namespace UFAMS.Api.Tests.Common;
 public class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
-    private readonly string _databaseName =
-        Guid.NewGuid().ToString();
-
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
@@ -21,32 +18,40 @@ public class CustomWebApplicationFactory
         {
             var descriptor =
                 services.SingleOrDefault(
-                    d => d.ServiceType ==
+                    d =>
+                    d.ServiceType ==
                     typeof(DbContextOptions<UFAMSDbContext>));
+
 
             if (descriptor != null)
             {
                 services.Remove(descriptor);
             }
 
-            services.AddDbContext<UFAMSDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(
-                    _databaseName);
-            });
+
+            services.AddDbContext<UFAMSDbContext>(
+                options =>
+                {
+                    options.UseInMemoryDatabase(
+                        "UFAMS_Test_DB");
+                });
         });
     }
+
 
     public void SeedDatabase()
     {
         using var scope =
             Services.CreateScope();
 
+
         var db =
             scope.ServiceProvider
                 .GetRequiredService<UFAMSDbContext>();
 
+
         db.Database.EnsureCreated();
+
 
         DatabaseInitializer.SeedAsync(db)
             .GetAwaiter()
