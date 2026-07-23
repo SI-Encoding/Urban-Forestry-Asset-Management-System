@@ -1,5 +1,3 @@
-using UFAMS.Domain.Enums;
-
 namespace UFAMS.Application.Features.Trees.ExportTreesGeoJson;
 
 public sealed record TreeGeoJsonProperties(
@@ -7,4 +5,4 @@ public sealed record TreeGeoJsonProperties(
     string AssetTag,
     string Species,
     string Park,
-    TreeHealthStatus HealthStatus);
+    string HealthStatus);

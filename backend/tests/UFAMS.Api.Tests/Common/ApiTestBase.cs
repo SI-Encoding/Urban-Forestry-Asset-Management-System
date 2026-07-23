@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 namespace UFAMS.Api.Tests.Common;
 
 public abstract class ApiTestBase
+    : IClassFixture<CustomWebApplicationFactory>
 {
     protected readonly HttpClient Client;
 

@@ -43,7 +43,7 @@ public sealed class ExportTreesGeoJsonHandler
                         tree.AssetTag,
                         tree.Species.CommonName,
                         tree.Park.Name,
-                        tree.HealthStatus)))
+                        tree.HealthStatus.ToString())))
             .ToList();
 
         return new GeoJsonFeatureCollection(
