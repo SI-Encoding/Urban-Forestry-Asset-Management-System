@@ -29,7 +29,11 @@ public static class WorkOrderEndpoints
                 return Results.Created(
                     $"/work-orders/{response.Id}",
                     response);
-            });
+            })
+        .WithName("CreateWorkOrder")
+        .WithSummary("Creates a new work order for a tree")
+        .WithDescription(
+            "Creates a new work order for a specific tree identified by its unique ID.");
 
         app.MapGet(
             "/trees/{treeId:guid}/work-orders",
@@ -43,7 +47,11 @@ public static class WorkOrderEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetTreeWorkOrders")
+        .WithSummary("Returns work orders for a specific tree")
+        .WithDescription(
+            "Retrieves all work orders associated with a specific tree identified by its unique ID.");
 
         app.MapPut(
             "/work-orders/{id:guid}/assign",
@@ -59,7 +67,11 @@ public static class WorkOrderEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("AssignWorkOrder")
+        .WithSummary("Assigns a work order to a user")
+        .WithDescription(
+            "Assigns a specific work order to a user identified by their unique ID.");
 
         app.MapGet(
             "/work-orders/{id:guid}",
@@ -73,7 +85,11 @@ public static class WorkOrderEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetWorkOrder")
+        .WithSummary("Returns a specific work order")
+        .WithDescription(
+            "Retrieves details for a specific work order identified by its unique ID.");
 
         app.MapPut(
             "/work-orders/{id:guid}/start",
@@ -88,7 +104,11 @@ public static class WorkOrderEndpoints
                         cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("StartWorkOrder")
+        .WithSummary("Starts a work order")
+        .WithDescription(
+            "Starts a specific work order identified by its unique ID.");
 
         app.MapPut(
             "/work-orders/{id:guid}/complete",
@@ -103,7 +123,11 @@ public static class WorkOrderEndpoints
                         cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("CompleteWorkOrder")
+        .WithSummary("Completes a work order")
+        .WithDescription(
+            "Completes a specific work order identified by its unique ID.");
 
         app.MapPut(
             "/work-orders/{id:guid}/cancel",
@@ -118,7 +142,11 @@ public static class WorkOrderEndpoints
                         cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("CancelWorkOrder")
+        .WithSummary("Cancels a work order")
+        .WithDescription(
+            "Cancels a specific work order identified by its unique ID.");
 
         return app;
     }

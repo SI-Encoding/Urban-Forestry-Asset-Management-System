@@ -10,7 +10,28 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc(
+        "v1",
+        new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "UFAMS API",
+            Version = "v1",
+            Description =
+                """
+                Urban Forest Asset Management System API.
+
+                Supports:
+                - Tree asset management
+                - Species lookup
+                - Park inventory reporting
+                - Tree inspections
+                - Maintenance work orders
+                """
+        });
+});
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

@@ -14,12 +14,17 @@ public static class ParkEndpoints
                 GetParksHandler handler,
                 CancellationToken cancellationToken) =>
             {
-                var response = await handler.Handle(
-                    new GetParksQuery(),
-                    cancellationToken);
+                var response =
+                    await handler.Handle(
+                        new GetParksQuery(),
+                        cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetParks")
+        .WithSummary("Returns all parks")
+        .WithDescription(
+            "Retrieves all parks managed by the Urban Forest Asset Management System.");
 
         app.MapGet(
             "/parks/{parkId:guid}/inventory",
@@ -34,7 +39,11 @@ public static class ParkEndpoints
                         cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetParkInventory")
+        .WithSummary("Returns park inventory")
+        .WithDescription(
+            "Provides tree counts, health statistics, and species breakdown for a park.");
 
         return app;
     }

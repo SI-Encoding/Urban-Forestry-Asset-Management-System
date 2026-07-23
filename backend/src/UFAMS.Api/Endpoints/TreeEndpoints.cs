@@ -29,7 +29,11 @@ public static class TreeEndpoints
                 return Results.Created(
                     $"/trees/{response.Id}",
                     response);
-            });
+            })
+        .WithName("RegisterTree")
+        .WithSummary("Registers a new tree")
+        .WithDescription(
+            "Creates a new tree entry in the Urban Forest Asset Management System.");
 
         app.MapGet(
             "/trees",
@@ -50,7 +54,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetTrees")
+        .WithSummary("Returns a list of trees")
+        .WithDescription(
+            "Retrieves a list of trees based on specified criteria.");
 
         app.MapGet(
             "/trees/{id:guid}",
@@ -64,7 +72,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetTree")
+        .WithSummary("Returns a specific tree")
+        .WithDescription(
+            "Retrieves details for a specific tree identified by its unique ID.");
 
         app.MapPut(
             "/trees/{id:guid}/measurements",
@@ -80,7 +92,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("UpdateTreeMeasurements")
+        .WithSummary("Updates tree measurements")
+        .WithDescription(
+            "Updates the measurements for a specific tree identified by its unique ID.");
 
         app.MapPut(
             "/trees/{id:guid}/location",
@@ -96,7 +112,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("RelocateTree")
+        .WithSummary("Relocates a tree")
+        .WithDescription(
+            "Updates the location for a specific tree identified by its unique ID.");
 
         app.MapPut(
             "/trees/{id:guid}/health",
@@ -112,7 +132,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("UpdateTreeHealth")
+        .WithSummary("Updates tree health status")
+        .WithDescription(
+            "Updates the health status for a specific tree identified by its unique ID.");
 
         app.MapGet(
             "/trees/search",
@@ -139,7 +163,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("SearchTrees")
+        .WithSummary("Searches for trees")
+        .WithDescription(
+            "Searches for trees based on specified criteria.");
 
         app.MapGet(
             "/trees/geojson",
@@ -166,7 +194,11 @@ public static class TreeEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("ExportTreesGeoJson")
+        .WithSummary("Exports trees as GeoJSON")
+        .WithDescription(
+            "Exports tree data as GeoJSON for mapping and visualization purposes.");
 
         app.MapGet(
             "/trees/nearby",
@@ -195,7 +227,11 @@ public static class TreeEndpoints
                         message = ex.Message
                     });
                 }
-            });
+            })
+        .WithName("FindNearbyTrees")
+        .WithSummary("Finds nearby trees")
+        .WithDescription(
+            "Finds trees within a specified radius of a given location.");
 
         return app;
     }

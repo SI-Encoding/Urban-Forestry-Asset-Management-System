@@ -18,7 +18,11 @@ public static class SpeciesEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetSpecies")
+        .WithSummary("Returns all species")
+        .WithDescription(
+            "Retrieves a list of all tree species managed by the Urban Forest Asset Management System.");
 
         app.MapGet(
             "/species/search",
@@ -33,7 +37,11 @@ public static class SpeciesEndpoints
                         cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("SearchSpecies")
+        .WithSummary("Searches species")
+        .WithDescription(
+            "Searches for tree species based on a search term.");
 
         return app;
     }

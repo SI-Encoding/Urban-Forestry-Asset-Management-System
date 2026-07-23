@@ -27,7 +27,11 @@ public static class InspectionEndpoints
                 return Results.Created(
                     $"/inspections/{response.Id}",
                     response);
-            });
+            })
+        .WithName("CreateInspection")
+        .WithSummary("Creates a new inspection for a tree")
+        .WithDescription(
+            "Creates a new inspection record for a specific tree identified by its unique ID.");
 
 
         app.MapGet(
@@ -42,7 +46,11 @@ public static class InspectionEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetTreeInspections")
+        .WithSummary("Returns inspections for a specific tree")
+        .WithDescription(
+            "Retrieves all inspection records for a specific tree identified by its unique ID.");
 
         app.MapGet(
             "/inspections/{id:guid}",
@@ -56,7 +64,11 @@ public static class InspectionEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("GetInspection")
+        .WithSummary("Returns a specific inspection")
+        .WithDescription(
+            "Retrieves the details of a specific inspection identified by its unique ID.");
 
         app.MapPut(
             "/inspections/{id:guid}/notes",
@@ -72,7 +84,11 @@ public static class InspectionEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("UpdateInspectionNotes")
+        .WithSummary("Updates inspection notes")
+        .WithDescription(
+            "Updates the notes for a specific inspection identified by its unique ID.");
 
         app.MapPut(
             "/inspections/{id:guid}/recommendation",
@@ -88,7 +104,11 @@ public static class InspectionEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("UpdateInspectionRecommendation")
+        .WithSummary("Updates inspection recommendation")
+        .WithDescription(
+            "Updates the recommendation for a specific inspection identified by its unique ID.");
 
         app.MapPut(
             "/inspections/{id:guid}/follow-up",
@@ -104,7 +124,11 @@ public static class InspectionEndpoints
                     cancellationToken);
 
                 return Results.Ok(response);
-            });
+            })
+        .WithName("ScheduleFollowUp")
+        .WithSummary("Schedules a follow-up for an inspection")
+        .WithDescription(
+            "Schedules a follow-up action for a specific inspection identified by its unique ID.");
 
         return app;
     }
