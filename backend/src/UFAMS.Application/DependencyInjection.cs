@@ -24,6 +24,7 @@ using UFAMS.Application.Features.Trees.SearchTrees;
 using UFAMS.Application.Features.Trees.ExportTreesGeoJson;
 using UFAMS.Application.Features.Trees.FindNearbyTrees;
 using UFAMS.Application.Features.Parks.GetParkInventory;
+using UFAMS.Application.Features.Species.SearchSpecies;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -56,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<ExportTreesGeoJsonHandler>();
         services.AddScoped<FindNearbyTreesHandler>();
         services.AddScoped<GetParkInventoryHandler>();
+        services.AddScoped<SearchSpeciesHandler>();
         return services;
     }
 }
