@@ -22,9 +22,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    var db = scope.ServiceProvider.GetRequiredService<UFAMSDbContext>();
+    using var scope = app.Services.CreateScope();
+
+    var db = scope.ServiceProvider
+        .GetRequiredService<UFAMSDbContext>();
 
     await db.Database.MigrateAsync();
 
@@ -46,3 +49,7 @@ app.MapParkEndpoints();
 app.MapInspectionEndpoints();
 app.MapWorkOrderEndpoints();
 app.Run();
+
+public partial class Program
+{
+}
