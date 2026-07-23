@@ -38,6 +38,36 @@ public class CustomWebApplicationFactory
         });
     }
 
+    public Guid GetSpeciesId(
+    string commonName)
+{
+    using var scope =
+        Services.CreateScope();
+
+    var db =
+        scope.ServiceProvider
+            .GetRequiredService<UFAMSDbContext>();
+
+    return db.Species
+        .First(s => s.CommonName == commonName)
+        .Id;
+}
+
+public Guid GetParkId(
+    string name)
+    {
+        using var scope =
+            Services.CreateScope();
+
+        var db =
+            scope.ServiceProvider
+                .GetRequiredService<UFAMSDbContext>();
+
+        return db.Parks
+            .First(p => p.Name == name)
+            .Id;
+    }
+
 
     public void SeedDatabase()
     {
