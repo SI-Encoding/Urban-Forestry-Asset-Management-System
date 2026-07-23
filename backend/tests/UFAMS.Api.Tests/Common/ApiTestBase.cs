@@ -1,10 +1,13 @@
-using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace UFAMS.Api.Tests.Common;
 
 public abstract class ApiTestBase
 {
-    protected readonly HttpClient Client;
+    protected HttpClient Client { get; }
+
+    protected JsonSerializerOptions JsonOptions { get; }
 
     protected ApiTestBase(
         CustomWebApplicationFactory factory)
@@ -12,5 +15,13 @@ public abstract class ApiTestBase
         factory.SeedDatabase();
 
         Client = factory.CreateClient();
+
+        JsonOptions = new JsonSerializerOptions
+        {
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
+        };
     }
 }

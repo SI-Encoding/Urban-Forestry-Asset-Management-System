@@ -9,6 +9,9 @@ namespace UFAMS.Api.Tests.Common;
 public class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
+    private readonly string _databaseName =
+        Guid.NewGuid().ToString();
+
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
@@ -29,7 +32,7 @@ public class CustomWebApplicationFactory
             services.AddDbContext<UFAMSDbContext>(options =>
             {
                 options.UseInMemoryDatabase(
-                    "UFAMS_Test_Database");
+                    _databaseName);
             });
         });
     }

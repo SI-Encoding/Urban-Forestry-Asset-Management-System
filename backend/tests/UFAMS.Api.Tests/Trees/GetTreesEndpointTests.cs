@@ -1,6 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using FluentAssertions;
 using UFAMS.Api.Tests.Common;
 using UFAMS.Application.Features.Trees.GetTrees;
@@ -26,15 +24,11 @@ public class GetTreesEndpointTests
         var trees =
             await response.Content.ReadFromJsonAsync<
                 List<GetTreesResponse>>(
-                    new JsonSerializerOptions
-                    {
-                        Converters =
-                        {
-                            new JsonStringEnumConverter()
-                        }
-                    });
+                    JsonOptions);
 
         trees.Should().NotBeNull();
-        trees.Should().NotBeEmpty();
+
+        trees.Should()
+            .NotBeEmpty();
     }
 }
