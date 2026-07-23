@@ -86,13 +86,24 @@ public class GetTreeEndpointTests
     [Fact]
     public async Task GetTree_WithMissingId_ReturnsNotFound()
     {
+        // Act
         var response =
             await Client.GetAsync(
                 $"/trees/{Guid.NewGuid()}");
 
 
+        // Assert
         response.StatusCode
             .Should()
             .Be(HttpStatusCode.NotFound);
+
+
+        var body =
+            await response.Content
+                .ReadAsStringAsync();
+
+
+        body.Should()
+            .Contain("Tree");
     }
 }
