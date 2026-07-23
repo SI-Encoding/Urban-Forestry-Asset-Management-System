@@ -114,4 +114,14 @@ public class TreeRepository : ITreeRepository
             t => t.AssetTag == assetTag,
             cancellationToken);
     }
+
+    public async Task<List<Tree>> GetByParkIdAsync(
+        Guid parkId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Trees
+            .Include(t => t.Species)
+            .Where(t => t.ParkId == parkId)
+            .ToListAsync(cancellationToken);
+    }
 }

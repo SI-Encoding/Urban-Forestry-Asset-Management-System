@@ -22,6 +22,10 @@ public interface ITreeRepository
         double? maxLongitude,
         CancellationToken cancellationToken = default);
 
+    Task<List<Tree>> GetByParkIdAsync(
+        Guid parkId,
+        CancellationToken cancellationToken);
+
     Task AddAsync(
         Tree tree,
         CancellationToken cancellationToken = default);

@@ -23,6 +23,7 @@ using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
 using UFAMS.Application.Features.Trees.SearchTrees;
 using UFAMS.Application.Features.Trees.ExportTreesGeoJson;
 using UFAMS.Application.Features.Trees.FindNearbyTrees;
+using UFAMS.Application.Features.Parks.GetParkInventory;
 namespace UFAMS.Application;
 
 public static class DependencyInjection
@@ -54,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<SearchTreesHandler>();
         services.AddScoped<ExportTreesGeoJsonHandler>();
         services.AddScoped<FindNearbyTreesHandler>();
+        services.AddScoped<GetParkInventoryHandler>();
         return services;
     }
 }
