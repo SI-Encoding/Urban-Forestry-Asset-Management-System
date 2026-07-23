@@ -9,10 +9,15 @@ namespace UFAMS.Api.Tests.Common;
 public class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
+    private readonly string _databaseName =
+        Guid.NewGuid().ToString();
+
+
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
 
         builder.ConfigureServices(services =>
         {
@@ -33,38 +38,46 @@ public class CustomWebApplicationFactory
                 options =>
                 {
                     options.UseInMemoryDatabase(
-                        "UFAMS_Test_DB");
+                        _databaseName);
                 });
         });
     }
 
+
     public Guid GetSpeciesId(
-    string commonName)
-{
-    using var scope =
-        Services.CreateScope();
-
-    var db =
-        scope.ServiceProvider
-            .GetRequiredService<UFAMSDbContext>();
-
-    return db.Species
-        .First(s => s.CommonName == commonName)
-        .Id;
-}
-
-public Guid GetParkId(
-    string name)
+        string commonName)
     {
         using var scope =
             Services.CreateScope();
+
 
         var db =
             scope.ServiceProvider
                 .GetRequiredService<UFAMSDbContext>();
 
+
+        return db.Species
+            .First(s =>
+                s.CommonName == commonName)
+            .Id;
+    }
+
+
+    public Guid GetParkId(
+        string name)
+    {
+        using var scope =
+            Services.CreateScope();
+
+
+        var db =
+            scope.ServiceProvider
+                .GetRequiredService<UFAMSDbContext>();
+
+
         return db.Parks
-            .First(p => p.Name == name)
+            .First(p =>
+                p.Name == name)
             .Id;
     }
 
@@ -83,7 +96,8 @@ public Guid GetParkId(
         db.Database.EnsureCreated();
 
 
-        DatabaseInitializer.SeedAsync(db)
+        DatabaseInitializer
+            .SeedAsync(db)
             .GetAwaiter()
             .GetResult();
     }
