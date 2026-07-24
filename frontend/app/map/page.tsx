@@ -1,9 +1,22 @@
-import { TreeMap } from "@/components/maps/TreeMap";
+import { getTrees } from "@/services/trees";
 
-export default function MapPage() {
+import { AppLayout } from "@/components/layout/AppLayout";
+import { TreeMapContainer } from "@/components/maps/TreeMapContainer";
+
+export default async function MapPage() {
+
+    const trees =
+        await getTrees();
+
     return (
-        <main className="p-8">
-            <TreeMap />
-        </main>
+
+        <AppLayout>
+
+            <TreeMapContainer
+                trees={trees}
+            />
+
+        </AppLayout>
+
     );
 }

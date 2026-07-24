@@ -1,23 +1,37 @@
 "use client";
-import "@/lib/leaflet";
-import { MapContainer, TileLayer } from "react-leaflet";
 
-import "leaflet/dist/leaflet.css";
+import dynamic from "next/dynamic";
 
-export function TreeMap() {
+import type { Tree } from "@/types/tree";
+
+interface TreeMapProps {
+    trees: Tree[];
+    onSelectTree: (tree: Tree) => void;
+}
+
+const ClientTreeMap = dynamic(
+    () =>
+        import("./ClientTreeMap").then(
+            (module) => module.ClientTreeMap
+        ),
+    {
+        ssr: false,
+        loading: () => (
+            <div>
+                Loading map...
+            </div>
+        ),
+    }
+);
+
+export function TreeMap({
+    trees,
+    onSelectTree
+}: TreeMapProps) {
     return (
-        <MapContainer
-            center={[49.2827, -123.1207]}
-            zoom={12}
-            style={{
-                height: "700px",
-                width: "100%",
-            }}
-        >
-            <TileLayer
-                attribution="OpenStreetMap"
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-        </MapContainer>
+        <ClientTreeMap
+    trees={trees}
+    onSelectTree={onSelectTree}
+/>
     );
 }
