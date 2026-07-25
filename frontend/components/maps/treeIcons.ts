@@ -1,3 +1,4 @@
+import { TreeHealthStatus } from "@/types/tree";
 import L from "leaflet";
 
 const shadow = "/leaflet/marker-shadow.png";
@@ -14,9 +15,26 @@ function createIcon(iconUrl: string) {
     });
 }
 
-export const treeIcons = {
-    Good: createIcon("/markers/green.png"),
-    Fair: createIcon("/markers/yellow.png"),
-    Poor: createIcon("/markers/orange.png"),
-    Critical: createIcon("/markers/red.png"),
+export const treeIcons: Record<TreeHealthStatus, L.Icon> = {
+
+    Excellent: createIcon(
+        "/markers/blue.png"
+    ),
+
+    Good: createIcon(
+        "/markers/green.png"
+    ),
+
+    Fair: createIcon(
+        "/markers/yellow.png"
+    ),
+
+    Poor: createIcon(
+        "/markers/orange.png"
+    ),
+
+    Dead: createIcon(
+        "/markers/red.png"
+    ),
+
 };

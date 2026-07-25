@@ -1,10 +1,11 @@
 import type { GeoCoordinate } from "./geo-coordinate";
 
 export type TreeHealthStatus =
+    | "Excellent"
     | "Good"
     | "Fair"
     | "Poor"
-    | "Critical";
+    | "Dead";
 
 export interface Tree {
     id: string;

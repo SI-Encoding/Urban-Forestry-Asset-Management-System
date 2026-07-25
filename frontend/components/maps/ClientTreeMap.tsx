@@ -33,7 +33,7 @@ export function ClientTreeMap({
             center={[49.2827, -123.1207]}
             zoom={12}
             style={{
-                height: "700px",
+                height: "calc(100vh - 170px)",
                 width: "100%",
             }}
         >
@@ -44,10 +44,10 @@ export function ClientTreeMap({
 
             {trees.map((tree) => (
                 <TreeMarker
-        key={tree.id}
-        tree={tree}
-        onSelect={onSelectTree}
-    />
+                    key={tree.id}
+                    tree={tree}
+                    onSelect={onSelectTree}
+                />
             ))}
         </MapContainer>
     );
