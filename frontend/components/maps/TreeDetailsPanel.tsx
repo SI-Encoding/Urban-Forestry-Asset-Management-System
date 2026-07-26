@@ -9,6 +9,7 @@ import {
     TreeDetailsTabs,
     type TreeDetailsTab,
 } from "./TreeDetailsTabs";
+import { HealthBadge } from "./HealthBadge";
 
 interface TreeDetailsPanelProps {
     tree?: Tree;
@@ -35,7 +36,7 @@ export function TreeDetailsPanel({
 
     return (
 
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="h-full overflow-y-auto rounded-lg border bg-white p-6 shadow-sm">
 
             <h2 className="mb-1 text-lg font-semibold">
                 {tree.assetTag}
@@ -89,9 +90,9 @@ export function TreeDetailsPanel({
                             Current Health
                         </p>
 
-                        <p>
-                            {tree.healthStatus}
-                        </p>
+                        <HealthBadge
+                            status={tree.healthStatus}
+                        />
                     </div>
 
                 </div>

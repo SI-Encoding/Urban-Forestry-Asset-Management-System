@@ -112,7 +112,7 @@ export function TreeMapContainer({
             onSearchChange={setSearch}
         />
 
-        <div className="flex flex-1">
+        <div className="flex min-h-0 flex-1">
 
             <div className="flex-1">
 
