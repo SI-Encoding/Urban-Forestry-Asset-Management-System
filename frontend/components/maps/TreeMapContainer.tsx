@@ -28,6 +28,12 @@ export function TreeMapContainer({
     const [inspections, setInspections] =
         useState<Inspection[]>([]);
 
+    const [isLoadingInspections, setIsLoadingInspections] =
+        useState(false);
+
+    const [inspectionError, setInspectionError] =
+        useState<string | null>(null);
+
     const [selectedHealth, setSelectedHealth] =
         useState<TreeHealthStatus[]>([
             "Excellent",
@@ -37,6 +43,46 @@ export function TreeMapContainer({
             "Dead",
         ]);
     
+    async function loadInspections(
+    treeId: string
+) {
+
+    try {
+
+        setIsLoadingInspections(true);
+
+        setInspectionError(null);
+
+        const data =
+            await getTreeInspections(treeId);
+
+        setInspections(data);
+
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load inspections:",
+            error
+        );
+
+
+        setInspectionError(
+            "Unable to load inspections."
+        );
+
+
+        setInspections([]);
+
+
+    } finally {
+
+        setIsLoadingInspections(false);
+
+    }
+
+}
+
     useEffect(() => {
 
     if (!selectedTree) {
@@ -45,15 +91,16 @@ export function TreeMapContainer({
 
     const treeId = selectedTree.id;
 
-    async function loadInspections() {
+    const timeout = setTimeout(() => {
 
-        const data = await getTreeInspections(treeId);
+        loadInspections(treeId);
 
-        setInspections(data);
+    }, 0);
 
-    }
 
-    loadInspections();
+    return () => {
+        clearTimeout(timeout);
+    };
 
 }, [selectedTree]);
 
@@ -125,6 +172,13 @@ export function TreeMapContainer({
             <TreeDetailsPanel
                 tree={selectedTree}
                 inspections={inspections}
+                onInspectionsChanged={() => {
+                    if (selectedTree) {
+                        loadInspections(
+                            selectedTree.id
+                        );
+                    }
+                }}
             />
 
         </div>
