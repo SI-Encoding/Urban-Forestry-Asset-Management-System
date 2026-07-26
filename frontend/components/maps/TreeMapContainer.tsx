@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Tree, TreeHealthStatus } from "@/types/tree";
 
 import { TreeMap } from "./TreeMap";
 import { TreeDetailsPanel } from "./TreeDetailsPanel";
 import { MapToolbar } from "./MapToolbar";
+
+import { getTreeInspections } from "@/services/inspections";
+import type { Inspection } from "@/types/inspection";
 
 interface TreeMapContainerProps {
     trees: Tree[];
@@ -22,6 +25,9 @@ export function TreeMapContainer({
     const [selectedTree, setSelectedTree] =
         useState<Tree>();
 
+    const [inspections, setInspections] =
+        useState<Inspection[]>([]);
+
     const [selectedHealth, setSelectedHealth] =
         useState<TreeHealthStatus[]>([
             "Excellent",
@@ -30,6 +36,26 @@ export function TreeMapContainer({
             "Poor",
             "Dead",
         ]);
+    
+    useEffect(() => {
+
+    if (!selectedTree) {
+        return;
+    }
+
+    const treeId = selectedTree.id;
+
+    async function loadInspections() {
+
+        const data = await getTreeInspections(treeId);
+
+        setInspections(data);
+
+    }
+
+    loadInspections();
+
+}, [selectedTree]);
 
     function toggleHealth(
         health: TreeHealthStatus
@@ -98,6 +124,7 @@ export function TreeMapContainer({
 
             <TreeDetailsPanel
                 tree={selectedTree}
+                inspections={inspections}
             />
 
         </div>
