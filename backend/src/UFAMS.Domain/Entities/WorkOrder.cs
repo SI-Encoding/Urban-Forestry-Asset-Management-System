@@ -89,17 +89,18 @@ public class WorkOrder : BaseEntity
 
 
     public void Start()
+{
+    if (Status != WorkOrderStatus.Open &&
+        Status != WorkOrderStatus.Assigned)
     {
-        if (Status != WorkOrderStatus.Assigned)
-        {
-            throw new InvalidOperationException(
-                "Only assigned work orders can be started.");
-        }
-
-        Status = WorkOrderStatus.InProgress;
-
-        MarkUpdated();
+        throw new InvalidOperationException(
+            "Only open or assigned work orders can be started.");
     }
+
+    Status = WorkOrderStatus.InProgress;
+
+    MarkUpdated();
+}
 
 
     public void Complete()

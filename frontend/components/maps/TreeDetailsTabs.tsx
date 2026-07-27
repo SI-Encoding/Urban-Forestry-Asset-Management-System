@@ -2,7 +2,8 @@
 
 export type TreeDetailsTab =
     | "overview"
-    | "inspections";
+    | "inspections"
+    | "workorders";
 
 interface Props {
     active: TreeDetailsTab;
@@ -20,6 +21,7 @@ export function TreeDetailsTabs({
     const tabs: TreeDetailsTab[] = [
         "overview",
         "inspections",
+        "workorders",
     ];
 
     return (
@@ -44,7 +46,11 @@ export function TreeDetailsTabs({
                         }
                     `}
                 >
-                    {tab}
+                    {tab === "workorders"
+                        ? "Work Orders"
+                        : tab === "overview"
+                            ? "Overview"
+                            : "Inspections"}
                 </button>
 
             ))}

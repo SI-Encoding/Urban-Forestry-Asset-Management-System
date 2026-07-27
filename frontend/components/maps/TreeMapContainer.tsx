@@ -10,6 +10,8 @@ import { MapToolbar } from "./MapToolbar";
 
 import { getTreeInspections } from "@/services/inspections";
 import type { Inspection } from "@/types/inspection";
+import { getTreeWorkOrders } from "@/services/workOrders";
+import type { WorkOrder } from "@/types/workOrder";
 
 interface TreeMapContainerProps {
     trees: Tree[];
@@ -27,6 +29,9 @@ export function TreeMapContainer({
 
     const [inspections, setInspections] =
         useState<Inspection[]>([]);
+
+    const [workOrders, setWorkOrders] =
+        useState<WorkOrder[]>([]);
 
     const [isLoadingInspections, setIsLoadingInspections] =
         useState(false);
@@ -83,6 +88,30 @@ export function TreeMapContainer({
 
 }
 
+    async function loadWorkOrders(
+    treeId: string
+) {
+
+    try {
+
+        const data =
+            await getTreeWorkOrders(treeId);
+
+        setWorkOrders(data);
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load work orders:",
+            error
+        );
+
+        setWorkOrders([]);
+
+    }
+
+}
+
     useEffect(() => {
 
     if (!selectedTree) {
@@ -94,7 +123,7 @@ export function TreeMapContainer({
     const timeout = setTimeout(() => {
 
         loadInspections(treeId);
-
+        loadWorkOrders(treeId);
     }, 0);
 
 
@@ -172,11 +201,15 @@ export function TreeMapContainer({
             <TreeDetailsPanel
                 tree={selectedTree}
                 inspections={inspections}
+                workOrders={workOrders}
                 onInspectionsChanged={() => {
                     if (selectedTree) {
-                        loadInspections(
-                            selectedTree.id
-                        );
+                        loadInspections(selectedTree.id);
+                    }
+                }}
+                onWorkOrdersChanged={() => {
+                    if (selectedTree) {
+                        loadWorkOrders(selectedTree.id);
                     }
                 }}
             />
