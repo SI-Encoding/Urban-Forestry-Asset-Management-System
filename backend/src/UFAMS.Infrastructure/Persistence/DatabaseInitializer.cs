@@ -1,96 +1,70 @@
 using Microsoft.EntityFrameworkCore;
-using UFAMS.Domain.Entities;
-using UFAMS.Domain.Enums;
-using UFAMS.Domain.ValueObjects;
-using UFAMS.Infrastructure.Persistence;
+using UFAMS.Infrastructure.Persistence.SeedData;
 
 namespace UFAMS.Infrastructure.Persistence;
+
 public static class DatabaseInitializer
 {
     public static async Task SeedAsync(UFAMSDbContext context)
     {
         if (!context.Species.Any())
-{
-    context.Species.Add(
-        new Species(
-            "Douglas Fir",
-            "Pseudotsuga menziesii",
-            true));
+        {
+            context.Species.AddRange(
+                SpeciesSeed.Create());
+        }
 
-    context.Species.Add(
-        new Species(
-            "Red Maple",
-            "Acer rubrum",
-            false));
-}
+        if (!context.Parks.Any())
+        {
+            context.Parks.AddRange(
+                ParkSeed.Create());
+        }
 
-if (!context.Parks.Any())
-{
-    context.Parks.Add(
-        new Park(
-            "Stanley Park",
-            new GeoCoordinate(49.3043, -123.1443),
-            405));
+        if (!context.Employees.Any())
+        {
+            context.Employees.AddRange(
+                EmployeeSeed.Create());
+        }
 
-    context.Parks.Add(
-        new Park(
-            "Queen Elizabeth Park",
-            new GeoCoordinate(49.2415, -123.1126),
-            52));
-}
+        await context.SaveChangesAsync();
 
-if (!context.Employees.Any())
-{
-    context.Employees.Add(
-        new Employee(
-            "John Smith",
-            "Arborist"));
+        if (!context.Trees.Any())
+        {
+            var trees = TreeSeed.Create(
+                await context.Species.ToListAsync(),
+                await context.Parks.ToListAsync());
 
-    context.Employees.Add(
-        new Employee(
-            "Sarah Johnson",
-            "Tree Technician"));
-}
+            context.Trees.AddRange(trees);
 
-await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+        }
 
-if (!context.Trees.Any())
-{
-    var douglasFir = await context.Species.FirstAsync(
-        s => s.CommonName == "Douglas Fir");
+        if (!context.Inspections.Any())
+        {
+            var trees = await context.Trees.ToListAsync();
 
-    var redMaple = await context.Species.FirstAsync(
-        s => s.CommonName == "Red Maple");
+            var inspections = InspectionSeed.Create(trees);
 
-    var stanleyPark = await context.Parks.FirstAsync(
-        p => p.Name == "Stanley Park");
+            context.Inspections.AddRange(inspections);
 
-    var qePark = await context.Parks.FirstAsync(
-        p => p.Name == "Queen Elizabeth Park");
+            await context.SaveChangesAsync();
+        }
 
-    context.Trees.Add(
-        new Tree(
-            "TREE-001",
-            douglasFir,
-            stanleyPark,
-            new GeoCoordinate(49.3043, -123.1443),
-            TreeHealthStatus.Good,
-            new DateOnly(2020, 1, 1),
-            12,
-            30));
+        if (!context.WorkOrders.Any())
+        {
+            var trees = await context.Trees.ToListAsync();
 
-    context.Trees.Add(
-        new Tree(
-            "TREE-002",
-            redMaple,
-            qePark,
-            new GeoCoordinate(49.2415, -123.1126),
-            TreeHealthStatus.Fair,
-            new DateOnly(2018, 5, 15),
-            8,
-            20));
+            var inspections = await context.Inspections.ToListAsync();
 
-}
-await context.SaveChangesAsync();
-}
+            var employees = await context.Employees.ToListAsync();
+
+            var workOrders = WorkOrderSeed.Create(
+                trees,
+                inspections,
+                employees);
+
+            context.WorkOrders.AddRange(workOrders);
+
+            await context.SaveChangesAsync();
+        }
+    }
 }

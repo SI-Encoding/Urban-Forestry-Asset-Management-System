@@ -22,6 +22,11 @@ public class TreeConfiguration :
             .IsUnique();
 
 
+        builder.Property(t => t.ArcGisFeatureId)
+            .HasMaxLength(100);
+
+        builder.HasIndex(t => t.ArcGisFeatureId);
+
         builder.HasOne(x => x.Species)
             .WithMany()
             .HasForeignKey("SpeciesId")

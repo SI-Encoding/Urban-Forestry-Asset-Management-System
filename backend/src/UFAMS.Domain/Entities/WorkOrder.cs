@@ -9,16 +9,13 @@ public class WorkOrder : BaseEntity
 
     public Tree Tree { get; private set; } = null!;
 
-
     public Guid? InspectionId { get; private set; }
 
     public Inspection? Inspection { get; private set; }
 
-
     public Guid? AssignedEmployeeId { get; private set; }
 
     public Employee? AssignedEmployee { get; private set; }
-
 
     public string Description { get; private set; } = string.Empty;
 
@@ -30,11 +27,14 @@ public class WorkOrder : BaseEntity
 
     public DateOnly? CompletedDate { get; private set; }
 
-
+    // Required by Entity Framework Core
     private WorkOrder()
     {
+        Tree = null!;
+        Inspection = null;
+        AssignedEmployee = null;
+        Description = string.Empty;
     }
-
 
     public WorkOrder(
         Tree tree,
@@ -48,11 +48,9 @@ public class WorkOrder : BaseEntity
         TreeId = tree.Id;
 
         Inspection = inspection;
-
         InspectionId = inspection?.Id;
 
-        Description = ValidateDescription(
-            description);
+        Description = ValidateDescription(description);
 
         CreatedDate = DateOnly.FromDateTime(
             DateTime.UtcNow);
@@ -64,6 +62,58 @@ public class WorkOrder : BaseEntity
         Status = WorkOrderStatus.Open;
     }
 
+    private WorkOrder(
+        Tree tree,
+        Inspection? inspection,
+        Employee? assignedEmployee,
+        string description,
+        DateOnly createdDate,
+        DateOnly? dueDate,
+        WorkOrderStatus status,
+        DateOnly? completedDate)
+    {
+        Tree = tree;
+        TreeId = tree.Id;
+
+        Inspection = inspection;
+        InspectionId = inspection?.Id;
+
+        AssignedEmployee = assignedEmployee;
+        AssignedEmployeeId = assignedEmployee?.Id;
+
+        Description = ValidateDescription(description);
+
+        CreatedDate = createdDate;
+
+        DueDate = ValidateDueDate(
+            createdDate,
+            dueDate);
+
+        Status = status;
+
+        CompletedDate = completedDate;
+    }
+
+    public static WorkOrder CreateSeedData(
+        Tree tree,
+        Inspection? inspection,
+        Employee? assignedEmployee,
+        string description,
+        DateOnly createdDate,
+        DateOnly? dueDate,
+        WorkOrderStatus status,
+        DateOnly? completedDate = null)
+    {
+        return new WorkOrder(
+            tree,
+            inspection,
+            assignedEmployee,
+            description,
+            createdDate,
+            dueDate,
+            status,
+            completedDate);
+    }
 
     public void AssignEmployee(
         Employee employee)
@@ -87,21 +137,19 @@ public class WorkOrder : BaseEntity
         MarkUpdated();
     }
 
-
     public void Start()
-{
-    if (Status != WorkOrderStatus.Open &&
-        Status != WorkOrderStatus.Assigned)
     {
-        throw new InvalidOperationException(
-            "Only open or assigned work orders can be started.");
+        if (Status != WorkOrderStatus.Open &&
+            Status != WorkOrderStatus.Assigned)
+        {
+            throw new InvalidOperationException(
+                "Only open or assigned work orders can be started.");
+        }
+
+        Status = WorkOrderStatus.InProgress;
+
+        MarkUpdated();
     }
-
-    Status = WorkOrderStatus.InProgress;
-
-    MarkUpdated();
-}
-
 
     public void Complete()
     {
@@ -120,7 +168,6 @@ public class WorkOrder : BaseEntity
         MarkUpdated();
     }
 
-
     public void Cancel()
     {
         if (Status == WorkOrderStatus.Completed)
@@ -134,7 +181,6 @@ public class WorkOrder : BaseEntity
         MarkUpdated();
     }
 
-
     private static string ValidateDescription(
         string description)
     {
@@ -147,7 +193,6 @@ public class WorkOrder : BaseEntity
 
         return description.Trim();
     }
-
 
     private static DateOnly? ValidateDueDate(
         DateOnly createdDate,

@@ -8,6 +8,8 @@ public class Tree : BaseEntity
 {
     public string AssetTag { get; private set; }
 
+    public string? ArcGisFeatureId { get; private set; }
+
     public Guid SpeciesId { get; private set; }
 
     public Species Species { get; private set; } = null!;
@@ -37,6 +39,7 @@ public class Tree : BaseEntity
         Species = null!;
         Park = null!;
         Location = null!;
+        ArcGisFeatureId = null;
     }
     public Tree(
         string assetTag,
@@ -84,6 +87,18 @@ public class Tree : BaseEntity
     {
         Park = park ?? throw new ArgumentNullException(nameof(park));
         Location = location ?? throw new ArgumentNullException(nameof(location));
+
+        MarkUpdated();
+    }
+
+    public void AssignArcGisFeatureId(string featureId)
+    {
+        if (string.IsNullOrWhiteSpace(featureId))
+            throw new ArgumentException(
+                "ArcGIS feature ID is required.",
+                nameof(featureId));
+
+        ArcGisFeatureId = featureId.Trim();
 
         MarkUpdated();
     }
