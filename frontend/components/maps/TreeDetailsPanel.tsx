@@ -4,28 +4,31 @@ import { useState } from "react";
 
 import type { Tree } from "@/types/tree";
 import type { Inspection } from "@/types/inspection";
+import type { WorkOrder } from "@/types/workOrder";
+
 import {
     startWorkOrder,
     completeWorkOrder,
     cancelWorkOrder,
 } from "@/services/workOrders";
+
 import {
     TreeDetailsTabs,
     type TreeDetailsTab,
 } from "./TreeDetailsTabs";
-import type { WorkOrder } from "@/types/workOrder";
+
 import { HealthBadge } from "../ui/HealthBadge";
+import { Button } from "../ui/button";
+
 import { EditInspectionForm } from "./EditInspectionForm";
 import { CreateInspectionForm } from "./CreateInspectionForm";
 import { CreateWorkOrderForm } from "./CreateWorkOrderForm";
-
 
 interface TreeDetailsPanelProps {
     tree?: Tree;
     inspections: Inspection[];
     workOrders: WorkOrder[];
 }
-
 
 export function TreeDetailsPanel({
     tree,
@@ -36,13 +39,37 @@ export function TreeDetailsPanel({
     const [activeTab, setActiveTab] =
         useState<TreeDetailsTab>("overview");
 
+    const [
+        editingInspectionId,
+        setEditingInspectionId,
+    ] = useState<string | null>(null);
 
-    const [editingInspectionId, setEditingInspectionId] =
-        useState<string | null>(null);
+    if (!tree) {
 
-    const [busyWorkOrderId, setBusyWorkOrderId] =
-        useState<string | null>(null);
-        
+        return (
+
+            <div
+                className="
+                    w-[420px]
+                    shrink-0
+                    rounded-lg
+                    border
+                    bg-white
+                    p-6
+                    shadow-sm
+                "
+            >
+
+                <p className="text-gray-500">
+                    Select a tree
+                </p>
+
+            </div>
+
+        );
+
+    }
+
     async function handleStartWorkOrder(
         workOrderId: string
     ) {
@@ -72,23 +99,6 @@ export function TreeDetailsPanel({
         window.location.reload();
 
     }
-    if (!tree) {
-
-        return (
-
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
-
-                <p className="text-gray-500">
-                    Select a tree
-                </p>
-
-            </div>
-
-        );
-
-    }
-
-
 
     const sortedInspections =
         [...inspections].sort(
@@ -98,12 +108,12 @@ export function TreeDetailsPanel({
                 new Date(a.inspectionDate).getTime()
         );
 
-
-
     return (
 
         <div
             className="
+                w-[420px]
+                shrink-0
                 h-full
                 overflow-y-auto
                 rounded-lg
@@ -118,24 +128,18 @@ export function TreeDetailsPanel({
                 {tree.assetTag}
             </h2>
 
-
             <p className="mb-6 text-sm text-gray-500">
                 {tree.speciesName}
             </p>
-
-
 
             <TreeDetailsTabs
                 active={activeTab}
                 onChange={setActiveTab}
             />
 
-
-
             {activeTab === "overview" && (
 
                 <div className="space-y-4">
-
 
                     <div>
                         <p className="text-xs uppercase text-gray-500">
@@ -147,31 +151,21 @@ export function TreeDetailsPanel({
                         </p>
                     </div>
 
-
-
                     <div>
                         <p className="text-xs uppercase text-gray-500">
                             Species
                         </p>
 
-                        <p>
-                            {tree.speciesName}
-                        </p>
+                        <p>{tree.speciesName}</p>
                     </div>
-
-
 
                     <div>
                         <p className="text-xs uppercase text-gray-500">
                             Park
                         </p>
 
-                        <p>
-                            {tree.parkName}
-                        </p>
+                        <p>{tree.parkName}</p>
                     </div>
-
-
 
                     <div>
                         <p className="text-xs uppercase text-gray-500">
@@ -183,16 +177,14 @@ export function TreeDetailsPanel({
                         />
                     </div>
 
-
                 </div>
 
             )}
 
-
-
             {activeTab === "inspections" && (
 
                 <>
+
                     <CreateInspectionForm
                         treeId={tree.id}
                         onCreated={() => window.location.reload()}
@@ -200,345 +192,299 @@ export function TreeDetailsPanel({
 
                     <hr className="my-6" />
 
-
-                    <h3 className="mb-4 mt-2 font-semibold">
+                    <h3 className="mb-4 font-semibold">
                         Inspection History
                     </h3>
 
+                    {sortedInspections.length === 0 ? (
 
+                        <p className="text-sm text-gray-500">
+                            No inspections found.
+                        </p>
 
-                    {
-                        sortedInspections.length === 0
+                    ) : (
 
-                        ? (
+                        <div className="space-y-4">
 
-                            <p className="text-sm text-gray-500">
-                                No inspections found.
-                            </p>
+                            {sortedInspections.map(
+                                (inspection) => (
 
-                        )
+                                    <div
+                                        key={inspection.id}
+                                        className="
+                                            rounded-md
+                                            border
+                                            p-4
+                                        "
+                                    >
 
-                        : (
+                                        <div
+                                            className="
+                                                flex
+                                                items-center
+                                                justify-between
+                                            "
+                                        >
 
-                            <div className="space-y-4">
+                                            <span className="font-medium">
+                                                {inspection.inspectionDate}
+                                            </span>
 
-                                {
-                                    sortedInspections.map(
-                                        (inspection) => (
+                                            <HealthBadge
+                                                status={
+                                                    inspection.observedHealth
+                                                }
+                                            />
 
-                                            <div
-                                                key={inspection.id}
-                                                className="
-                                                    rounded-md
-                                                    border
-                                                    p-4
-                                                "
-                                            >
+                                        </div>
 
-                                                <div
-                                                    className="
-                                                        flex
-                                                        items-center
-                                                        justify-between
-                                                    "
-                                                >
+                                        <div className="mt-3">
+                                            <p className="text-xs uppercase text-gray-500">
+                                                Notes
+                                            </p>
 
-                                                    <span className="font-medium">
-                                                        {
-                                                            inspection.inspectionDate
-                                                        }
-                                                    </span>
+                                            <p>
+                                                {inspection.notes}
+                                            </p>
+                                        </div>
 
+                                        <div className="mt-3">
+                                            <p className="text-xs uppercase text-gray-500">
+                                                Recommendation
+                                            </p>
 
-                                                    <HealthBadge
-                                                        status={
-                                                            inspection.observedHealth
-                                                        }
-                                                    />
+                                            <p>
+                                                {inspection.recommendation}
+                                            </p>
+                                        </div>
 
-                                                </div>
+                                        <div className="mt-3">
+                                            <p className="text-xs uppercase text-gray-500">
+                                                Next Inspection
+                                            </p>
 
+                                            <p>
+                                                {inspection.nextInspectionDate ??
+                                                    "Not scheduled"}
+                                            </p>
+                                        </div>
 
+                                        <div className="mt-4">
 
-                                                <div className="mt-3">
+                                            {editingInspectionId === inspection.id ? (
 
-                                                    <p className="text-xs uppercase text-gray-500">
-                                                        Notes
-                                                    </p>
+                                                <EditInspectionForm
+                                                    inspection={inspection}
+                                                    onSaved={() => {
 
-                                                    <p>
-                                                        {
-                                                            inspection.notes
-                                                        }
-                                                    </p>
+                                                        setEditingInspectionId(null);
 
-                                                </div>
+                                                        window.location.reload();
 
+                                                    }}
+                                                    onCancel={() =>
+                                                        setEditingInspectionId(null)
+                                                    }
+                                                />
 
+                                            ) : (
 
-                                                <div className="mt-3">
-
-                                                    <p className="text-xs uppercase text-gray-500">
-                                                        Recommendation
-                                                    </p>
-
-                                                    <p>
-                                                        {
-                                                            inspection.recommendation
-                                                        }
-                                                    </p>
-
-                                                </div>
-
-
-
-                                                <div className="mt-3">
-
-                                                    <p className="text-xs uppercase text-gray-500">
-                                                        Next Inspection
-                                                    </p>
-
-                                                    <p>
-                                                        {
-                                                            inspection.nextInspectionDate
-                                                            ??
-                                                            "Not scheduled"
-                                                        }
-                                                    </p>
-
-                                                </div>
-
-
-
-                                                <div className="mt-4">
-
-                                                    {
-                                                        editingInspectionId === inspection.id
-
-                                                        ? (
-
-                                                            <EditInspectionForm
-                                                                inspection={
-                                                                    inspection
-                                                                }
-
-                                                                onSaved={() => {
-
-                                                                    setEditingInspectionId(
-                                                                        null
-                                                                    );
-
-                                                                    window.location.reload();
-
-                                                                }}
-
-                                                                onCancel={() => {
-
-                                                                    setEditingInspectionId(
-                                                                        null
-                                                                    );
-
-                                                                }}
-                                                            />
-
-                                                        )
-
-                                                        : (
-
-                                                            <button
-                                                                onClick={() =>
-                                                                    setEditingInspectionId(
-                                                                        inspection.id
-                                                                    )
-                                                                }
-
-                                                                className="
-                                                                    rounded
-                                                                    border
-                                                                    px-3
-                                                                    py-1
-                                                                    text-sm
-                                                                "
-                                                            >
-                                                                Edit
-                                                            </button>
-
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        setEditingInspectionId(
+                                                            inspection.id
                                                         )
                                                     }
+                                                >
+                                                    Edit
+                                                </Button>
 
-                                                </div>
+                                            )}
 
+                                        </div>
 
-                                            </div>
+                                    </div>
 
-                                        )
-                                    )
-                                }
+                                )
+                            )}
 
-                            </div>
+                        </div>
 
-                        )
-                    }
-
+                    )}
 
                 </>
 
             )}
+
             {activeTab === "workorders" && (
 
-            <>
-                <CreateWorkOrderForm
-                    treeId={tree.id}
-                    onCreated={() => window.location.reload()}
-                />
+                <>
 
-                <hr className="my-6" />
-                <h3 className="mb-4 mt-2 font-semibold">
-                    Work Orders
-                </h3>
+                    <CreateWorkOrderForm
+                        treeId={tree.id}
+                        onCreated={() => window.location.reload()}
+                    />
 
-                {workOrders.length === 0 ? (
+                    <hr className="my-6" />
 
-                    <p className="text-sm text-gray-500">
-                        No work orders found.
-                    </p>
+                    <h3 className="mb-4 font-semibold">
+                        Work Orders
+                    </h3>
 
-                ) : (
+                    {workOrders.length === 0 ? (
 
-                    <div className="space-y-4">
+                        <p className="text-sm text-gray-500">
+                            No work orders found.
+                        </p>
 
-                        {workOrders.map((workOrder) => (
+                    ) : (
 
-                            <div
-                                key={workOrder.id}
-                                className="rounded-md border p-4"
-                            >
+                        <div className="space-y-4">
 
-                                <div className="flex justify-between">
+                            {workOrders.map((workOrder) => (
 
-                                    <span className="font-medium">
-                                        {workOrder.createdDate}
-                                    </span>
+                                <div
+                                    key={workOrder.id}
+                                    className="rounded-md border p-4"
+                                >
 
-                                    <span
-                                        className={`
-                                            rounded-full
-                                            px-3
-                                            py-1
-                                            text-xs
-                                            font-medium
+                                    <div className="flex justify-between">
 
-                                            ${
-                                                workOrder.status === "Open"
-                                                    ? "bg-yellow-100 text-yellow-800"
-                                                : workOrder.status === "InProgress"
-                                                    ? "bg-blue-100 text-blue-800"
-                                                : workOrder.status === "Completed"
-                                                    ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
-                                            }
-                                        `}
-                                    >
-                                        {workOrder.status}
-                                    </span>
+                                        <span className="font-medium">
+                                            {workOrder.createdDate}
+                                        </span>
+
+                                        <span
+                                            className="
+                                                rounded-full
+                                                border
+                                                px-3
+                                                py-1
+                                                text-xs
+                                                font-medium
+                                            "
+                                        >
+                                            {workOrder.status}
+                                        </span>
+
+                                    </div>
+
+                                    <div className="mt-3">
+
+                                        <p className="text-xs uppercase text-gray-500">
+                                            Description
+                                        </p>
+
+                                        <p>
+                                            {workOrder.description}
+                                        </p>
+
+                                    </div>
+
+                                    <div className="mt-3">
+
+                                        <p className="text-xs uppercase text-gray-500">
+                                            Due Date
+                                        </p>
+
+                                        <p>
+                                            {workOrder.dueDate}
+                                        </p>
+
+                                    </div>
+
+                                    <div className="mt-3">
+
+                                        <p className="text-xs uppercase text-gray-500">
+                                            Completed
+                                        </p>
+
+                                        <p>
+                                            {workOrder.completedDate ??
+                                                "Not completed"}
+                                        </p>
+
+                                    </div>
+
+                                    <div className="mt-4 flex gap-2">
+
+                                        {workOrder.status === "Open" && (
+
+                                            <>
+
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleStartWorkOrder(
+                                                            workOrder.id
+                                                        )
+                                                    }
+                                                >
+                                                    Start
+                                                </Button>
+
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleCancelWorkOrder(
+                                                            workOrder.id
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </Button>
+
+                                            </>
+
+                                        )}
+
+                                        {workOrder.status === "InProgress" && (
+
+                                            <>
+
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleCompleteWorkOrder(
+                                                            workOrder.id
+                                                        )
+                                                    }
+                                                >
+                                                    Complete
+                                                </Button>
+
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleCancelWorkOrder(
+                                                            workOrder.id
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </Button>
+
+                                            </>
+
+                                        )}
+
+                                    </div>
 
                                 </div>
 
-                                <div className="mt-3">
+                            ))}
 
-                                    <p className="text-xs uppercase text-gray-500">
-                                        Description
-                                    </p>
+                        </div>
 
-                                    <p>
-                                        {workOrder.description}
-                                    </p>
+                    )}
 
-                                </div>
+                </>
 
-                                <div className="mt-3">
-
-                                    <p className="text-xs uppercase text-gray-500">
-                                        Due Date
-                                    </p>
-
-                                    <p>
-                                        {workOrder.dueDate}
-                                    </p>
-
-                                </div>
-
-                                <div className="mt-3">
-
-                                    <p className="text-xs uppercase text-gray-500">
-                                        Completed
-                                    </p>
-
-                                    <p>
-                                        {workOrder.completedDate ??
-                                            "Not completed"}
-                                    </p>
-
-                                </div>
-                                <div className="mt-4 flex gap-2">
-
-                                    {workOrder.status === "Open" && (
-                                        <>
-                                            <button
-                                                onClick={() =>
-                                                    handleStartWorkOrder(workOrder.id)
-                                                }
-                                                className="rounded bg-blue-600 px-3 py-1 text-sm text-white"
-                                            >
-                                                Start
-                                            </button>
-
-                                            <button
-                                                onClick={() =>
-                                                    handleCancelWorkOrder(workOrder.id)
-                                                }
-                                                className="rounded bg-red-600 px-3 py-1 text-sm text-white"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
-                                    )}
-
-                                    {workOrder.status === "InProgress" && (
-                                        <>
-                                            <button
-                                                onClick={() =>
-                                                    handleCompleteWorkOrder(workOrder.id)
-                                                }
-                                                className="rounded bg-green-600 px-3 py-1 text-sm text-white"
-                                            >
-                                                Complete
-                                            </button>
-
-                                            <button
-                                                onClick={() =>
-                                                    handleCancelWorkOrder(workOrder.id)
-                                                }
-                                                className="rounded bg-red-600 px-3 py-1 text-sm text-white"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
-                                    )}
-
-                                </div>                 
-                            </div>
-
-                        ))}
-
-                    </div>
-
-                )}
-
-            </>
-
-        )}
-
+            )}
 
         </div>
 
