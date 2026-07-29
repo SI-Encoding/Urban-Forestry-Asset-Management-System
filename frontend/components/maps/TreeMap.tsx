@@ -27,12 +27,14 @@ const ClientTreeMap = dynamic(
 
 export function TreeMap({
     trees,
+    selectedTree,
     onSelectTree
 }: TreeMapProps) {
     return (
         <ClientTreeMap
-    trees={trees}
-    onSelectTree={onSelectTree}
-/>
+            trees={trees}
+            selectedTree={selectedTree}
+            onSelectTree={onSelectTree}
+        />
     );
 }
