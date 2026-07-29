@@ -8,6 +8,7 @@ import type {
 
 
 import { WorkOrderStatusBadge } from "@/components/ui/WorkOrderStatusBadge";
+import { formatDate } from "../utils/date-format";
 
 
 export const workOrderColumns:
@@ -74,9 +75,7 @@ export const workOrderColumns:
         cell: ({
             row
         }) =>
-            new Date(
-                row.original.createdDate
-            ).toLocaleDateString(),
+            formatDate(row.original.createdDate)
     },
 
 
@@ -87,11 +86,7 @@ export const workOrderColumns:
         cell: ({
             row
         }) =>
-            row.original.dueDate
-                ? new Date(
-                    row.original.dueDate
-                ).toLocaleDateString()
-                : "-",
+            formatDate(row.original.dueDate)
     },
 
 

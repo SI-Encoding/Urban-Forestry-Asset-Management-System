@@ -3,6 +3,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { Inspection } from "@/types/inspection";
 
 import { HealthBadge } from "@/components/ui/HealthBadge";
+import { formatDate } from "../utils/date-format";
 
 
 export const inspectionColumns: ColumnDef<Inspection>[] = [
@@ -26,9 +27,7 @@ export const inspectionColumns: ColumnDef<Inspection>[] = [
         accessorKey: "inspectionDate",
         header: "Inspection Date",
         cell: ({ row }) =>
-            new Date(
-                row.original.inspectionDate
-            ).toLocaleDateString(),
+            formatDate(row.original.inspectionDate)
     },
 
     {
@@ -60,9 +59,7 @@ export const inspectionColumns: ColumnDef<Inspection>[] = [
                 return "-";
             }
 
-            return new Date(
-                date
-            ).toLocaleDateString();
+            return formatDate(date)
 
         },
     },
