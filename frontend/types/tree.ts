@@ -7,6 +7,11 @@ export type TreeHealthStatus =
     | "Poor"
     | "Dead";
 
+export interface TreeLocation {
+    latitude: number;
+    longitude: number;
+}
+
 export interface Tree {
     id: string;
     assetTag: string;

@@ -2,10 +2,20 @@ import { apiFetch, apiPost, apiPut } from "./api-client";
 
 import type { WorkOrder } from "@/types/workOrder";
 
+
 export interface CreateWorkOrderCommand {
     description: string;
     dueDate?: string;
 }
+
+
+export function getWorkOrders() {
+
+    return apiFetch<WorkOrder[]>(
+        "/work-orders"
+    );
+}
+
 
 export function getTreeWorkOrders(
     treeId: string
@@ -14,6 +24,7 @@ export function getTreeWorkOrders(
         `/trees/${treeId}/work-orders`
     );
 }
+
 
 export function createWorkOrder(
     treeId: string,
@@ -25,6 +36,7 @@ export function createWorkOrder(
     );
 }
 
+
 export function startWorkOrder(
     id: string
 ) {
@@ -33,6 +45,7 @@ export function startWorkOrder(
     );
 }
 
+
 export function completeWorkOrder(
     id: string
 ) {
@@ -40,6 +53,7 @@ export function completeWorkOrder(
         `/work-orders/${id}/complete`
     );
 }
+
 
 export function cancelWorkOrder(
     id: string

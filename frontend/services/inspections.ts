@@ -10,6 +10,11 @@ export interface CreateInspectionRequest {
     nextInspectionDate?: string;
 }
 
+export function getInspections() {
+    return apiFetch<Inspection[]>(
+        "/inspections"
+    );
+}
 
 export function getTreeInspections(
     treeId: string

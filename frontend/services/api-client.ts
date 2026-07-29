@@ -85,3 +85,44 @@ export async function apiPut<T>(
     return response.json();
 
 }
+
+export async function apiPatch<T>(
+    url: string,
+    body: unknown
+): Promise<T> {
+
+    const response = await fetch(
+        `${API_URL}${url}`,
+        {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        });
+
+    if (!response.ok) {
+        throw new Error(
+            `API request failed: ${response.status}`
+        );
+    }
+
+    return response.json();
+}
+
+export async function apiDelete(
+    url: string
+): Promise<void> {
+
+    const response = await fetch(
+        `${API_URL}${url}`,
+        {
+            method: "DELETE",
+        });
+
+    if (!response.ok) {
+        throw new Error(
+            `API request failed: ${response.status}`
+        );
+    }
+}
