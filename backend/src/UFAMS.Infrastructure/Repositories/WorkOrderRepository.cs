@@ -26,6 +26,23 @@ public class WorkOrderRepository : IWorkOrderRepository
             cancellationToken);
     }
 
+    public async Task<List<WorkOrder>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.WorkOrders
+
+            .Include(x => x.Tree)
+                .ThenInclude(x => x.Species)
+
+            .Include(x => x.Tree)
+                .ThenInclude(x => x.Park)
+
+            .Include(x => x.AssignedEmployee)
+
+            .OrderByDescending(x => x.CreatedDate)
+
+            .ToListAsync(cancellationToken);
+    }
 
     public async Task<WorkOrder?> GetByIdAsync(
         Guid id,

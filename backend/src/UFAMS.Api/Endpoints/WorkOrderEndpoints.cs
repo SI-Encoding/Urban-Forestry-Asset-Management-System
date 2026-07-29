@@ -4,6 +4,7 @@ using UFAMS.Application.Features.WorkOrders.CompleteWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CreateWorkOrder;
 using UFAMS.Application.Features.WorkOrders.GetTreeWorkOrders;
 using UFAMS.Application.Features.WorkOrders.GetWorkOrder;
+using UFAMS.Application.Features.WorkOrders.GetWorkOrders;
 using UFAMS.Application.Features.WorkOrders.StartWorkOrder;
 
 namespace UFAMS.Api.Endpoints;
@@ -72,6 +73,24 @@ public static class WorkOrderEndpoints
         .WithSummary("Assigns a work order to a user")
         .WithDescription(
             "Assigns a specific work order to a user identified by their unique ID.");
+
+        app.MapGet(
+            "/work-orders",
+            async (
+                GetWorkOrdersHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response =
+                    await handler.Handle(
+                        new GetWorkOrdersQuery(),
+                        cancellationToken);
+
+                return Results.Ok(response);
+            })
+        .WithName("GetWorkOrders")
+        .WithSummary("Returns all work orders")
+        .WithDescription(
+            "Retrieves all work orders with related tree, species, park, and employee information.");
 
         app.MapGet(
             "/work-orders/{id:guid}",

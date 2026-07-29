@@ -8,6 +8,9 @@ public interface IWorkOrderRepository
         WorkOrder workOrder,
         CancellationToken cancellationToken = default);
 
+    Task<List<WorkOrder>> GetAllAsync(
+        CancellationToken cancellationToken = default);
+
     Task<WorkOrder?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);
