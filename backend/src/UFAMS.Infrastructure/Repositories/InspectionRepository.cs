@@ -29,6 +29,17 @@ public class InspectionRepository : IInspectionRepository
                 cancellationToken);
     }
 
+    public async Task<List<Inspection>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Inspections
+            .Include(i => i.Tree)
+                .ThenInclude(t => t.Species)
+            .Include(i => i.Tree)
+                .ThenInclude(t => t.Park)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<Inspection>> GetByTreeIdAsync(
         Guid treeId,
         CancellationToken cancellationToken = default)

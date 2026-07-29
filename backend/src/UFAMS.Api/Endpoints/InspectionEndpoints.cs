@@ -4,6 +4,7 @@ using UFAMS.Application.Features.Inspections.GetTreeInspections;
 using UFAMS.Application.Features.Inspections.UpdateNotes;
 using UFAMS.Application.Features.Inspections.UpdateRecommendation;
 using UFAMS.Application.Features.Inspections.ScheduleFollowUp;
+using UFAMS.Application.Features.Inspections.GetInspections;
 namespace UFAMS.Api.Endpoints;
 
 public static class InspectionEndpoints
@@ -51,6 +52,19 @@ public static class InspectionEndpoints
         .WithSummary("Returns inspections for a specific tree")
         .WithDescription(
             "Retrieves all inspection records for a specific tree identified by its unique ID.");
+
+        app.MapGet(
+            "/inspections",
+            async (
+                GetInspectionsHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                var response = await handler.Handle(
+                    new GetInspectionsQuery(),
+                    cancellationToken);
+
+                return Results.Ok(response);
+            });
 
         app.MapGet(
             "/inspections/{id:guid}",

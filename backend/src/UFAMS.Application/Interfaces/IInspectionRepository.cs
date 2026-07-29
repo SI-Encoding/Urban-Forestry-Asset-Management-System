@@ -4,6 +4,9 @@ namespace UFAMS.Application.Interfaces;
 
 public interface IInspectionRepository
 {
+    Task<List<Inspection>> GetAllAsync(
+        CancellationToken cancellationToken = default);
+        
     Task<Inspection?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);

@@ -17,6 +17,7 @@ using UFAMS.Application.Features.WorkOrders.CreateWorkOrder;
 using UFAMS.Application.Features.WorkOrders.GetTreeWorkOrders;
 using UFAMS.Application.Features.WorkOrders.AssignWorkOrder;
 using UFAMS.Application.Features.WorkOrders.GetWorkOrder;
+using UFAMS.Application.Features.WorkOrders.GetWorkOrders;
 using UFAMS.Application.Features.WorkOrders.StartWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CompleteWorkOrder;
 using UFAMS.Application.Features.WorkOrders.CancelWorkOrder;
@@ -58,6 +59,8 @@ public static class DependencyInjection
         services.AddScoped<FindNearbyTreesHandler>();
         services.AddScoped<GetParkInventoryHandler>();
         services.AddScoped<SearchSpeciesHandler>();
+        services.AddScoped<GetInspectionsHandler>();
+        services.AddScoped<GetWorkOrdersHandler>();
         return services;
     }
 }
