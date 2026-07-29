@@ -6,6 +6,7 @@ import type { Tree } from "@/types/tree";
 
 interface TreeMapProps {
     trees: Tree[];
+    selectedTree?: Tree;
     onSelectTree: (tree: Tree) => void;
 }
 

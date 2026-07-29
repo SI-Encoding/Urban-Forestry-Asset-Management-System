@@ -14,7 +14,7 @@ import {
     type TreeDetailsTab,
 } from "./TreeDetailsTabs";
 import type { WorkOrder } from "@/types/workOrder";
-import { HealthBadge } from "./HealthBadge";
+import { HealthBadge } from "../ui/HealthBadge";
 import { EditInspectionForm } from "./EditInspectionForm";
 import { CreateInspectionForm } from "./CreateInspectionForm";
 import { CreateWorkOrderForm } from "./CreateWorkOrderForm";
@@ -24,8 +24,6 @@ interface TreeDetailsPanelProps {
     tree?: Tree;
     inspections: Inspection[];
     workOrders: WorkOrder[];
-    onInspectionsChanged: () => void;
-    onWorkOrdersChanged: () => void;
 }
 
 
@@ -33,10 +31,7 @@ export function TreeDetailsPanel({
     tree,
     inspections,
     workOrders,
-    onInspectionsChanged,
-    onWorkOrdersChanged,
 }: TreeDetailsPanelProps) {
-
 
     const [activeTab, setActiveTab] =
         useState<TreeDetailsTab>("overview");
@@ -54,7 +49,7 @@ export function TreeDetailsPanel({
 
         await startWorkOrder(workOrderId);
 
-        onWorkOrdersChanged();
+        window.location.reload();
 
     }
 
@@ -64,7 +59,7 @@ export function TreeDetailsPanel({
 
         await completeWorkOrder(workOrderId);
 
-        onWorkOrdersChanged();
+        window.location.reload();
 
     }
 
@@ -74,7 +69,7 @@ export function TreeDetailsPanel({
 
         await cancelWorkOrder(workOrderId);
 
-        onWorkOrdersChanged();
+        window.location.reload();
 
     }
     if (!tree) {
@@ -200,7 +195,7 @@ export function TreeDetailsPanel({
                 <>
                     <CreateInspectionForm
                         treeId={tree.id}
-                        onCreated={onInspectionsChanged}
+                        onCreated={() => window.location.reload()}
                     />
 
                     <hr className="my-6" />
@@ -333,7 +328,7 @@ export function TreeDetailsPanel({
                                                                         null
                                                                     );
 
-                                                                    onInspectionsChanged();
+                                                                    window.location.reload();
 
                                                                 }}
 
@@ -394,7 +389,7 @@ export function TreeDetailsPanel({
             <>
                 <CreateWorkOrderForm
                     treeId={tree.id}
-                    onCreated={onWorkOrdersChanged}
+                    onCreated={() => window.location.reload()}
                 />
 
                 <hr className="my-6" />
