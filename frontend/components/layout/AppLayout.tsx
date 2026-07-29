@@ -21,10 +21,10 @@ export function AppLayout({
 
                 <Header />
 
-                <main className="flex-1 overflow-hidden p-8 bg-gray-50">
-
-                    {children}
-
+                <main className="flex-1 overflow-auto p-8 bg-gray-50">
+                    <div className="min-h-full">
+                        {children}
+                    </div>
                 </main>
 
             </div>
