@@ -1,7 +1,7 @@
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-
+import { DashboardActivity } from "@/components/dashboard/DashboardActivity";
 import { getTrees } from "@/services/trees";
 import { getParks } from "@/services/parks";
 import { getSpecies } from "@/services/species";
@@ -121,6 +121,17 @@ export default async function Dashboard() {
 
             />
 
+            <DashboardActivity
+
+                inspections={
+                    inspections
+                }
+
+                workOrders={
+                    workOrders
+                }
+
+            />
 
         </main>
 
