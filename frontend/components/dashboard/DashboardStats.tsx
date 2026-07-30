@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+
 import { StatCard } from "./StatCard";
 
 
@@ -113,16 +117,26 @@ export function DashboardStats({
             />
 
 
+            <Link
+                href="/trees?health=Poor"
+                className="
+                    block
+                    transition
+                    hover:scale-[1.02]
+                "
+            >
 
-            <StatCard
+                <StatCard
 
-                title="⚠ Trees Needing Attention"
+                    title="⚠ Trees Needing Attention"
 
-                value={
-                    treesNeedingAttention
-                }
+                    value={
+                        treesNeedingAttention
+                    }
 
-            />
+                />
+
+            </Link>
 
 
         </div>
