@@ -1,7 +1,7 @@
 "use client";
 
 import type { TreeHealthStatus } from "@/types/tree";
-
+import { ExportGeoJsonButton } from "./ExportGeoJsonButton";
 interface MapToolbarProps {
     selected: TreeHealthStatus[];
     onChange: (health: TreeHealthStatus) => void;
@@ -86,7 +86,7 @@ export function MapToolbar({
                     );
 
                 })}
-
+            <ExportGeoJsonButton />
             </div>
 
         </div>
