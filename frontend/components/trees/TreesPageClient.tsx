@@ -45,21 +45,41 @@ export function TreesPageClient({
 
     const filteredTrees =
 
-        healthFilter
+    healthFilter === "attention"
 
-        ?
+    ?
 
-        trees.filter(
+    trees.filter(
 
-            tree =>
+        tree =>
 
-                tree.healthStatus === healthFilter
+            [
+                "Fair",
+                "Poor",
+                "Dead",
+            ].includes(
+                tree.healthStatus
+            )
 
-        )
+    )
 
-        :
+    :
 
-        trees;
+    healthFilter
+
+    ?
+
+    trees.filter(
+
+        tree =>
+
+            tree.healthStatus === healthFilter
+
+    )
+
+    :
+
+    trees;
 
 
 

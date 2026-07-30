@@ -118,7 +118,7 @@ export function DashboardStats({
 
 
             <Link
-                href="/trees?health=Poor"
+                href="/trees?health=attention"
                 className="
                     block
                     transition
