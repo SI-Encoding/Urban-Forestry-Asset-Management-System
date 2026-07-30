@@ -1,54 +1,102 @@
 "use client";
 
+
+import Link from "next/link";
+
+
 import {
+
     Card,
+
     CardContent,
+
     CardHeader,
+
     CardTitle,
+
 } from "@/components/ui/card";
+
 
 import type { WorkOrder } from "@/types/workOrder";
 
+import { useRouter } from "next/navigation";
 
 interface UpcomingWorkOrdersProps {
-    workOrders: WorkOrder[];
+
+    workOrders:
+        WorkOrder[];
+
 }
 
 
+
 export function UpcomingWorkOrders({
+
     workOrders,
+
 }: UpcomingWorkOrdersProps) {
 
 
-    const upcoming = [...workOrders]
-        .filter(
-            workOrder =>
-                workOrder.status !== "Completed" &&
-                workOrder.status !== "Cancelled" &&
-                workOrder.dueDate !== null
-        )
-        .sort(
-            (a, b) =>
-                new Date(a.dueDate!).getTime() -
-                new Date(b.dueDate!).getTime()
-        )
-        .slice(
-            0,
-            5
-        );
+const router = useRouter();
+    const upcoming =
+
+        [...workOrders]
+
+            .filter(
+
+                workOrder =>
+
+                    workOrder.status !== "Completed"
+
+                    &&
+
+                    workOrder.status !== "Cancelled"
+
+                    &&
+
+                    workOrder.dueDate !== null
+
+            )
+
+            .sort(
+
+                (a, b) =>
+
+                    new Date(
+                        a.dueDate!
+                    ).getTime()
+
+                    -
+
+                    new Date(
+                        b.dueDate!
+                    ).getTime()
+
+            )
+
+            .slice(
+                0,
+                5
+            );
+
 
 
     return (
 
         <Card>
 
+
             <CardHeader>
 
                 <CardTitle>
+
                     Upcoming Work Orders
+
                 </CardTitle>
 
+
             </CardHeader>
+
 
 
             <CardContent>
@@ -57,15 +105,21 @@ export function UpcomingWorkOrders({
                 {
                     upcoming.length === 0
 
-                    ? (
+                    ?
+
+                    (
 
                         <p
+
                             className="
                                 text-sm
                                 text-muted-foreground
                             "
+
                         >
+
                             No upcoming work orders.
+
                         </p>
 
                     )
@@ -75,47 +129,71 @@ export function UpcomingWorkOrders({
                     (
 
                         <div
+
                             className="
                                 space-y-4
                             "
+
                         >
 
                             {
+
                                 upcoming.map(
+
                                     workOrder => (
 
-                                        <div
+                                        <Link
+
+
                                             key={
                                                 workOrder.id
                                             }
 
+
+                                            href={`/map?treeId=${workOrder.treeId}`}
+
+
                                             className="
+                                                block
                                                 rounded-md
                                                 border
                                                 p-4
+                                                transition
+                                                hover:bg-muted
                                             "
+
+
                                         >
 
+
                                             <div
+
                                                 className="
                                                     flex
                                                     justify-between
-                                                    gap-4
                                                 "
+
                                             >
 
+
                                                 <p
+
                                                     className="
                                                         font-medium
                                                     "
+
                                                 >
+
                                                     {
                                                         workOrder.description
                                                     }
+
                                                 </p>
 
 
+
                                                 <span
+
                                                     className="
                                                         rounded-full
                                                         bg-blue-100
@@ -125,22 +203,28 @@ export function UpcomingWorkOrders({
                                                         font-medium
                                                         text-blue-800
                                                     "
+
                                                 >
+
                                                     {
                                                         workOrder.status
                                                     }
+
                                                 </span>
+
 
                                             </div>
 
 
 
                                             <p
+
                                                 className="
                                                     mt-2
                                                     text-sm
                                                     text-muted-foreground
                                                 "
+
                                             >
 
                                                 Due:
@@ -148,31 +232,26 @@ export function UpcomingWorkOrders({
                                                 {" "}
 
                                                 {
-                                                    new Date(
-                                                        workOrder.dueDate!
-                                                    ).toLocaleDateString(
-                                                        "en-US",
-                                                        {
-                                                            year: "numeric",
-                                                            month: "short",
-                                                            day: "numeric",
-                                                        }
-                                                    )
+                                                    workOrder.dueDate
                                                 }
+
 
                                             </p>
 
 
-                                        </div>
+                                        </Link>
 
                                     )
+
                                 )
+
                             }
 
 
                         </div>
 
                     )
+
                 }
 
 
@@ -182,4 +261,5 @@ export function UpcomingWorkOrders({
         </Card>
 
     );
+
 }

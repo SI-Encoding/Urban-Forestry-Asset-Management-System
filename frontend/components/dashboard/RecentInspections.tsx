@@ -1,37 +1,26 @@
 "use client";
 
+import Link from "next/link";
 
 import {
-
     Card,
-
     CardContent,
-
     CardHeader,
-
     CardTitle,
-
 } from "@/components/ui/card";
 
-
 import {
-
     HealthBadge
-
 } from "@/components/ui/HealthBadge";
-
 
 import type { Inspection } from "@/types/inspection";
 
 
-
 interface RecentInspectionsProps {
 
-    inspections:
-        Inspection[];
+    inspections: Inspection[];
 
 }
-
 
 
 export function RecentInspections({
@@ -67,32 +56,27 @@ export function RecentInspections({
             );
 
 
-
     return (
 
         <Card>
 
-
             <CardHeader>
 
                 <CardTitle>
-
                     Recent Inspections
-
                 </CardTitle>
-
 
             </CardHeader>
 
 
-
             <CardContent>
-
 
                 {
                     recentInspections.length === 0
 
-                    ? (
+                    ?
+
+                    (
 
                         <p
                             className="
@@ -117,28 +101,38 @@ export function RecentInspections({
 
                             {
                                 recentInspections.map(
+
                                     inspection => (
 
-                                        <div
+                                        <Link
 
                                             key={
                                                 inspection.id
                                             }
 
+                                            href={
+                                                `/map?treeId=${inspection.treeId}`
+                                            }
+
                                             className="
+                                                block
                                                 rounded-md
                                                 border
                                                 p-4
+                                                transition
+                                                hover:bg-muted
                                             "
 
                                         >
 
                                             <div
+
                                                 className="
                                                     flex
                                                     justify-between
                                                     items-center
                                                 "
+
                                             >
 
                                                 <p
@@ -146,9 +140,7 @@ export function RecentInspections({
                                                         font-medium
                                                     "
                                                 >
-
                                                     🌲 {inspection.assetTag}
-
                                                 </p>
 
 
@@ -163,13 +155,14 @@ export function RecentInspections({
                                             </div>
 
 
-
                                             <p
+
                                                 className="
                                                     mt-2
                                                     text-sm
                                                     text-muted-foreground
                                                 "
+
                                             >
 
                                                 {
@@ -179,12 +172,13 @@ export function RecentInspections({
                                             </p>
 
 
-                                        </div>
+                                        </Link>
 
                                     )
 
                                 )
                             }
+
 
                         </div>
 
