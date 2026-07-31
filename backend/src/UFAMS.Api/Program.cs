@@ -6,6 +6,7 @@ using UFAMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using UFAMS.Infrastructure.Configuration;
+using UFAMS.Infrastructure.ArcGIS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +57,11 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<ArcGisOptions>(
     builder.Configuration.GetSection(
         ArcGisOptions.SectionName));
-        
+
+builder.Services.AddHttpClient<
+    IArcGisAuthenticationService,
+    ArcGisAuthenticationService>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
@@ -86,6 +91,7 @@ app.MapSpeciesEndpoints();
 app.MapParkEndpoints();
 app.MapInspectionEndpoints();
 app.MapWorkOrderEndpoints();
+app.MapArcGisEndpoints();
 app.Run();
 
 public partial class Program
