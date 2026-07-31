@@ -22,3 +22,4 @@ dist/
 
 # Shared
 .vscode/
+backend/src/UFAMS.Api/appsettings.Development.json
