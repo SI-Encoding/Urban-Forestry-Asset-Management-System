@@ -5,6 +5,7 @@ using UFAMS.Api.Endpoints;
 using UFAMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using UFAMS.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,10 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<ArcGisOptions>(
+    builder.Configuration.GetSection(
+        ArcGisOptions.SectionName));
+        
 var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
