@@ -29,6 +29,21 @@ public static class ArcGisEndpoints
         .WithDescription(
             "Requests an OAuth token from ArcGIS Online.");
 
+        app.MapGet(
+            "/arcgis/service-info",
+            async (
+                IArcGisFeatureServiceClient client,
+                CancellationToken cancellationToken) =>
+            {
+                var info =
+                    await client.GetServiceInfoAsync(
+                        cancellationToken);
+
+                return Results.Ok(info);
+            })
+        .WithName("ArcGisServiceInfo")
+        .WithSummary("Gets ArcGIS Feature Service information");
+
         return app;
     }
 }

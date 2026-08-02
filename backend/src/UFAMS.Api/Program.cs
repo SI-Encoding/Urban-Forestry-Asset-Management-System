@@ -62,6 +62,10 @@ builder.Services.AddHttpClient<
     IArcGisAuthenticationService,
     ArcGisAuthenticationService>();
 
+builder.Services.AddHttpClient<
+    IArcGisFeatureServiceClient,
+    ArcGisFeatureServiceClient>();
+    
 var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
