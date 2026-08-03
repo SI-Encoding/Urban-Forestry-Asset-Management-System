@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using UFAMS.Infrastructure.Persistence;
 using UFAMS.Application.Interfaces;
 using UFAMS.Infrastructure.Repositories;
+using UFAMS.Application.Features.ArcGisSync;
 
 namespace UFAMS.Infrastructure;
 
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IInspectionRepository, InspectionRepository>();
         services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<SpatialDataSyncService>();
         return services;
     }
 }

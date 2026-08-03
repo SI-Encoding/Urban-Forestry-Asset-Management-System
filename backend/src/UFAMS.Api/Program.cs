@@ -65,7 +65,11 @@ builder.Services.AddHttpClient<
 builder.Services.AddHttpClient<
     IArcGisFeatureServiceClient,
     ArcGisFeatureServiceClient>();
-    
+
+builder.Services.AddScoped<
+    IArcGisFeatureProvider,
+    ArcGisFeatureServiceAdapter>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
@@ -96,6 +100,7 @@ app.MapParkEndpoints();
 app.MapInspectionEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapArcGisEndpoints();
+app.MapArcGisSyncEndpoints();
 app.Run();
 
 public partial class Program
