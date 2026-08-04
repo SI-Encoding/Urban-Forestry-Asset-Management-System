@@ -24,6 +24,23 @@ public static class ArcGisSyncEndpoints
         .WithDescription(
             "Returns a synchronization plan without modifying the database.");
 
+        app.MapPost(
+            "/arcgis/sync/apply",
+            async (
+                SpatialDataSyncService syncService,
+                CancellationToken cancellationToken) =>
+            {
+                var result =
+                    await syncService.ApplyAsync(
+                        cancellationToken);
+
+                return Results.Ok(result);
+            })
+        .WithName("ApplyArcGisSync")
+        .WithSummary("Apply ArcGIS synchronization")
+        .WithDescription(
+            "Applies ArcGIS changes to UFAMS.");
+
         return app;
     }
 }

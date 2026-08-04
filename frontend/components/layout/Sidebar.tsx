@@ -10,6 +10,7 @@ import {
     TreesIcon,
     ClipboardCheck,
     Wrench,
+    RefreshCw,
 } from "lucide-react";
 
 const links = [
@@ -47,6 +48,11 @@ const links = [
         href: "/work-orders",
         label: "Work Orders",
         icon: Wrench,
+    },
+    {
+        href: "/arcgis-sync",
+        label: "ArcGIS Sync",
+        icon: RefreshCw,
     },
 ];
 

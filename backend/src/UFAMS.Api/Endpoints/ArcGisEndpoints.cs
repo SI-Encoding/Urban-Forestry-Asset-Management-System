@@ -17,17 +17,12 @@ public static class ArcGisEndpoints
                     await authenticationService.GetAccessTokenAsync(
                         cancellationToken);
 
-                return Results.Ok(
-                    new
-                    {
-                        Success = true,
-                        TokenLength = token.Length
-                    });
-            })
-        .WithName("ArcGisTokenTest")
-        .WithSummary("Tests ArcGIS OAuth authentication")
-        .WithDescription(
-            "Requests an OAuth token from ArcGIS Online.");
+                return Results.Ok(new
+                {
+                    Success = true,
+                    TokenLength = token.Length
+                });
+            });
 
         app.MapGet(
             "/arcgis/service-info",
@@ -35,14 +30,40 @@ public static class ArcGisEndpoints
                 IArcGisFeatureServiceClient client,
                 CancellationToken cancellationToken) =>
             {
-                var info =
+                var result =
                     await client.GetServiceInfoAsync(
                         cancellationToken);
 
-                return Results.Ok(info);
-            })
-        .WithName("ArcGisServiceInfo")
-        .WithSummary("Gets ArcGIS Feature Service information");
+                return Results.Ok(result);
+            });
+
+        app.MapGet(
+            "/arcgis/features",
+            async (
+                IArcGisFeatureServiceClient client,
+                CancellationToken cancellationToken) =>
+            {
+                var result =
+                    await client.GetFeaturesAsync(
+                        cancellationToken);
+
+                return Results.Ok(result);
+            });
+
+        app.MapGet(
+            "/arcgis/raw-features",
+            async (
+                IArcGisFeatureServiceClient client,
+                CancellationToken cancellationToken) =>
+            {
+                var result =
+                    await client.GetRawFeaturesAsync(
+                        cancellationToken);
+
+                return Results.Text(
+                    result,
+                    "application/json");
+            });
 
         return app;
     }

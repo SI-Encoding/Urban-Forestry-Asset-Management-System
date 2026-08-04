@@ -66,4 +66,90 @@ public sealed class ArcGisFeatureServiceClient
 
         return result;
     }
+
+    public async Task<IReadOnlyList<ArcGisFeature>> GetFeaturesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var token =
+            await _authenticationService.GetAccessTokenAsync(
+                cancellationToken);
+
+        var url =
+            $"{_options.FeatureServiceUrl}/0/query" +
+            "?where=1%3D1" +
+            "&outFields=*" +
+            "&returnGeometry=true" +
+            "&f=json" +
+            $"&token={token}";
+
+        var response =
+            await _httpClient.GetAsync(
+                url,
+                cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        var result =
+            await response.Content.ReadFromJsonAsync<ArcGisQueryResponse>(
+                cancellationToken: cancellationToken);
+
+        if (result is null)
+        {
+            throw new InvalidOperationException(
+                "Unable to retrieve ArcGIS features.");
+        }
+
+        return result.Features
+            .Select(feature =>
+                new ArcGisFeature(
+                    Id: feature.Attributes.OBJECTID.ToString(),
+                    AssetTag: feature.Attributes.assetTag,
+                    Species: feature.Attributes.species,
+                    Park: feature.Attributes.park,
+                    HealthStatus: feature.Attributes.healthStatus,
+                    Latitude: feature.Geometry.y,
+                    Longitude: feature.Geometry.x))
+            .ToList();
+    }
+
+
+
+    public async Task<string> GetRawFeaturesAsync(
+    CancellationToken cancellationToken = default)
+{
+    var token =
+        await _authenticationService.GetAccessTokenAsync(
+            cancellationToken);
+
+    var url =
+        $"{_options.FeatureServiceUrl}/query" +
+        "?where=1%3D1" +
+        "&outFields=*" +
+        "&returnGeometry=true" +
+        "&f=pjson" +
+        $"&token={token}";
+
+    Console.WriteLine();
+    Console.WriteLine("===== ARC GIS QUERY =====");
+    Console.WriteLine(url);
+    Console.WriteLine("=========================");
+    Console.WriteLine();
+
+    var response =
+        await _httpClient.GetAsync(
+            url,
+            cancellationToken);
+
+    var content =
+        await response.Content.ReadAsStringAsync(
+            cancellationToken);
+
+    Console.WriteLine();
+    Console.WriteLine("===== ARC GIS RESPONSE =====");
+    Console.WriteLine(content);
+    Console.WriteLine("============================");
+    Console.WriteLine();
+
+    return content;
+}
 }

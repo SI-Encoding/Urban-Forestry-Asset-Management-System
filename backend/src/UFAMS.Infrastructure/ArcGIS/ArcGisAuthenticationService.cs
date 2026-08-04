@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Text.Json;
 
 using Microsoft.Extensions.Options;
 
@@ -27,14 +27,10 @@ public sealed class ArcGisAuthenticationService
         var form =
             new Dictionary<string, string>
             {
-                ["client_id"] =
-                    _options.ClientId,
-
-                ["client_secret"] =
-                    _options.ClientSecret,
-
-                ["grant_type"] =
-                    "client_credentials"
+                ["client_id"] = _options.ClientId,
+                ["client_secret"] = _options.ClientSecret,
+                ["grant_type"] = "client_credentials",
+                ["f"] = "json"
             };
 
         var response =
@@ -43,14 +39,24 @@ public sealed class ArcGisAuthenticationService
                 new FormUrlEncodedContent(form),
                 cancellationToken);
 
+        var raw =
+            await response.Content.ReadAsStringAsync(
+                cancellationToken);
+
+        Console.WriteLine();
+        Console.WriteLine("========== ARC GIS TOKEN ==========");
+        Console.WriteLine(raw);
+        Console.WriteLine("===================================");
+        Console.WriteLine();
+
         response.EnsureSuccessStatusCode();
 
         var token =
-            await response.Content.ReadFromJsonAsync
-            <ArcGisTokenResponse>(
-                cancellationToken: cancellationToken);
+            JsonSerializer.Deserialize<ArcGisTokenResponse>(
+                raw);
 
-        if (token is null)
+        if (token is null ||
+            string.IsNullOrWhiteSpace(token.AccessToken))
         {
             throw new InvalidOperationException(
                 "Unable to retrieve ArcGIS access token.");
