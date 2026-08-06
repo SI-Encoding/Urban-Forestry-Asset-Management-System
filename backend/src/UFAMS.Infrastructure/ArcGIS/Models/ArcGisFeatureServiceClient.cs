@@ -67,7 +67,7 @@ public sealed class ArcGisFeatureServiceClient
         return result;
     }
 
-    public async Task<IReadOnlyList<ArcGisFeature>> GetFeaturesAsync(
+    public async Task<IReadOnlyList<Models.ArcGisFeature>> GetFeaturesAsync(
         CancellationToken cancellationToken = default)
     {
         var token =
@@ -79,6 +79,7 @@ public sealed class ArcGisFeatureServiceClient
             "?where=1%3D1" +
             "&outFields=*" +
             "&returnGeometry=true" +
+            "&outSR=4326" +
             "&f=json" +
             $"&token={token}";
 
@@ -101,55 +102,38 @@ public sealed class ArcGisFeatureServiceClient
 
         return result.Features
             .Select(feature =>
-                new ArcGisFeature(
-                    Id: feature.Attributes.OBJECTID.ToString(),
-                    AssetTag: feature.Attributes.assetTag,
-                    Species: feature.Attributes.species,
-                    Park: feature.Attributes.park,
-                    HealthStatus: feature.Attributes.healthStatus,
-                    Latitude: feature.Geometry.y,
-                    Longitude: feature.Geometry.x))
+            {
+                return new ArcGisFeature(
+
+                    Id:
+                        feature.Attributes.OBJECTID.ToString(),
+
+
+                    AssetTag:
+                        feature.Attributes.assetTag,
+
+
+                    Species:
+                        feature.Attributes.species,
+
+
+                    Park:
+                        feature.Attributes.park,
+
+
+                    HealthStatus:
+                        feature.Attributes.healthStatus,
+
+
+                    Latitude:
+                        feature.Geometry.y,
+
+
+                    Longitude:
+                        feature.Geometry.x
+
+                );
+            })
             .ToList();
     }
-
-
-
-    public async Task<string> GetRawFeaturesAsync(
-    CancellationToken cancellationToken = default)
-{
-    var token =
-        await _authenticationService.GetAccessTokenAsync(
-            cancellationToken);
-
-    var url =
-        $"{_options.FeatureServiceUrl}/query" +
-        "?where=1%3D1" +
-        "&outFields=*" +
-        "&returnGeometry=true" +
-        "&f=pjson" +
-        $"&token={token}";
-
-    Console.WriteLine();
-    Console.WriteLine("===== ARC GIS QUERY =====");
-    Console.WriteLine(url);
-    Console.WriteLine("=========================");
-    Console.WriteLine();
-
-    var response =
-        await _httpClient.GetAsync(
-            url,
-            cancellationToken);
-
-    var content =
-        await response.Content.ReadAsStringAsync(
-            cancellationToken);
-
-    Console.WriteLine();
-    Console.WriteLine("===== ARC GIS RESPONSE =====");
-    Console.WriteLine(content);
-    Console.WriteLine("============================");
-    Console.WriteLine();
-
-    return content;
-}
 }

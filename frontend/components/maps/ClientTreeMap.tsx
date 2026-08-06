@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import L from "leaflet";
+
 import {
     MapContainer,
     TileLayer,
@@ -9,6 +11,7 @@ import {
 } from "react-leaflet";
 
 import type { Tree } from "@/types/tree";
+
 import { TreeMarker } from "./TreeMarker";
 
 import { configureLeaflet } from "@/lib/leaflet";
@@ -21,6 +24,38 @@ interface ClientTreeMapProps {
     onSelectTree: (tree: Tree) => void;
 }
 
+function FitToTrees({
+    trees,
+}: {
+    trees: Tree[];
+}) {
+    const map = useMap();
+
+    useEffect(() => {
+
+        if (trees.length === 0) {
+            return;
+        }
+
+        const bounds = L.latLngBounds(
+            trees.map(tree => [
+                tree.location.latitude,
+                tree.location.longitude,
+            ])
+        );
+
+        map.fitBounds(
+            bounds,
+            {
+                padding: [50, 50],
+            }
+        );
+
+    }, [trees, map]);
+
+    return null;
+}
+
 function FlyToSelectedTree({
     tree,
 }: {
@@ -29,6 +64,7 @@ function FlyToSelectedTree({
     const map = useMap();
 
     useEffect(() => {
+
         if (!tree) {
             return;
         }
@@ -44,6 +80,7 @@ function FlyToSelectedTree({
                 duration: 1.5,
             }
         );
+
     }, [tree, map]);
 
     return null;
@@ -54,15 +91,19 @@ export function ClientTreeMap({
     selectedTree,
     onSelectTree,
 }: ClientTreeMapProps) {
-    useEffect(() => {
-    async function setup() {
-        await configureLeaflet();
-    }
 
-    setup();
-}, []);
+    useEffect(() => {
+
+        async function setup() {
+            await configureLeaflet();
+        }
+
+        setup();
+
+    }, []);
 
     return (
+
         <MapContainer
             center={[49.2827, -123.1207]}
             zoom={12}
@@ -71,21 +112,34 @@ export function ClientTreeMap({
                 width: "100%",
             }}
         >
+
             <TileLayer
                 attribution="OpenStreetMap"
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+
+            <FitToTrees
+                trees={trees}
+            />
+
             <FlyToSelectedTree
                 tree={selectedTree}
             />
-            {trees.map((tree) => (
+
+            {trees.map(tree => (
+
                 <TreeMarker
                     key={tree.id}
                     tree={tree}
-                    selected={tree.id === selectedTree?.id}
+                    selected={
+                        tree.id === selectedTree?.id
+                    }
                     onSelect={onSelectTree}
                 />
+
             ))}
+
         </MapContainer>
+
     );
 }

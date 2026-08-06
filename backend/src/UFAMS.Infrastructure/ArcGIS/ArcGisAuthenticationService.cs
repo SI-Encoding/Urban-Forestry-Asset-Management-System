@@ -1,4 +1,4 @@
-using System.Text.Json;
+using System.Net.Http.Json;
 
 using Microsoft.Extensions.Options;
 
@@ -11,57 +11,108 @@ public sealed class ArcGisAuthenticationService
 {
     private readonly HttpClient _httpClient;
 
-    private readonly ArcGisOptions _options;
+    private readonly ArcGisTokenStore _tokenStore;
+
+    private readonly ArcGisOAuthOptions _options;
 
     public ArcGisAuthenticationService(
         HttpClient httpClient,
-        IOptions<ArcGisOptions> options)
+        ArcGisTokenStore tokenStore,
+        IOptions<ArcGisOAuthOptions> options)
     {
         _httpClient = httpClient;
+        _tokenStore = tokenStore;
         _options = options.Value;
     }
 
     public async Task<string> GetAccessTokenAsync(
         CancellationToken cancellationToken = default)
     {
+        var token =
+            _tokenStore.Get();
+
+
+        if (token is null)
+        {
+            throw new InvalidOperationException(
+                "ArcGIS user has not authenticated.");
+        }
+
+
+        if (token.ExpiresAt > DateTime.UtcNow)
+        {
+            return token.AccessToken;
+        }
+
+
+        return await RefreshTokenAsync(
+            token.RefreshToken,
+            cancellationToken);
+    }
+
+    private async Task<string> RefreshTokenAsync(
+        string refreshToken,
+        CancellationToken cancellationToken)
+    {
         var form =
-            new Dictionary<string, string>
+            new Dictionary<string,string>
             {
-                ["client_id"] = _options.ClientId,
-                ["client_secret"] = _options.ClientSecret,
-                ["grant_type"] = "client_credentials",
-                ["f"] = "json"
+                ["client_id"] =
+                    _options.ClientId,
+
+                ["grant_type"] =
+                    "refresh_token",
+
+                ["refresh_token"] =
+                    refreshToken,
+
+                ["f"] =
+                    "json"
             };
+
 
         var response =
             await _httpClient.PostAsync(
-                "https://www.arcgis.com/sharing/rest/oauth2/token",
+                $"{_options.PortalUrl}/sharing/rest/oauth2/token",
                 new FormUrlEncodedContent(form),
                 cancellationToken);
 
-        var raw =
-            await response.Content.ReadAsStringAsync(
-                cancellationToken);
-
-        Console.WriteLine();
-        Console.WriteLine("========== ARC GIS TOKEN ==========");
-        Console.WriteLine(raw);
-        Console.WriteLine("===================================");
-        Console.WriteLine();
 
         response.EnsureSuccessStatusCode();
 
-        var token =
-            JsonSerializer.Deserialize<ArcGisTokenResponse>(
-                raw);
 
-        if (token is null ||
-            string.IsNullOrWhiteSpace(token.AccessToken))
+        var token =
+            await response.Content
+                .ReadFromJsonAsync<ArcGisTokenResponse>(
+                    cancellationToken:
+                        cancellationToken);
+
+
+        if (token is null)
         {
             throw new InvalidOperationException(
-                "Unable to retrieve ArcGIS access token.");
+                "Unable to refresh ArcGIS token.");
         }
 
-        return token.AccessToken;
+
+        var updatedToken =
+            new ArcGisUserToken
+            {
+                AccessToken =
+                    token.AccessToken,
+
+                RefreshToken =
+                    token.RefreshToken ?? refreshToken,
+
+                ExpiresAt =
+                    DateTime.UtcNow
+                        .AddSeconds(token.ExpiresIn)
+            };
+
+
+        _tokenStore.Save(updatedToken);
+
+
+        return updatedToken.AccessToken;
     }
 }

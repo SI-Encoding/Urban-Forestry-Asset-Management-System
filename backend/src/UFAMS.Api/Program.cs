@@ -70,6 +70,18 @@ builder.Services.AddScoped<
     IArcGisFeatureProvider,
     ArcGisFeatureServiceAdapter>();
 
+builder.Services.AddSingleton<OAuthStateStore>();
+
+builder.Services
+    .Configure<ArcGisOAuthOptions>(
+        builder.Configuration.GetSection("ArcGis"));
+
+builder.Services.AddSingleton<OAuthStateStore>();
+
+builder.Services.AddScoped<ArcGisOAuthService>();
+
+builder.Services.AddSingleton<ArcGisTokenStore>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
@@ -101,6 +113,7 @@ app.MapInspectionEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapArcGisEndpoints();
 app.MapArcGisSyncEndpoints();
+app.MapArcGisOAuthEndpoints();
 app.Run();
 
 public partial class Program

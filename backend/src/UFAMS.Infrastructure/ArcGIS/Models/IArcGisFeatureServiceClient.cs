@@ -9,7 +9,4 @@ public interface IArcGisFeatureServiceClient
 
     Task<IReadOnlyList<Models.ArcGisFeature>> GetFeaturesAsync(
         CancellationToken cancellationToken = default);
-
-    Task<string> GetRawFeaturesAsync(
-        CancellationToken cancellationToken = default);
 }

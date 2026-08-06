@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using UFAMS.Infrastructure.ArcGIS;
+using UFAMS.Infrastructure.Configuration;
 
 namespace UFAMS.Api.Endpoints;
 
@@ -51,17 +53,31 @@ public static class ArcGisEndpoints
             });
 
         app.MapGet(
-            "/arcgis/raw-features",
+            "/arcgis/layer-info",
             async (
-                IArcGisFeatureServiceClient client,
+                IArcGisAuthenticationService authService,
+                IOptions<ArcGisOptions> options,
+                HttpClient httpClient,
                 CancellationToken cancellationToken) =>
             {
-                var result =
-                    await client.GetRawFeaturesAsync(
+                var token =
+                    await authService.GetAccessTokenAsync(
                         cancellationToken);
 
-                return Results.Text(
-                    result,
+                var url =
+                    $"{options.Value.FeatureServiceUrl}/0" +
+                    "?f=pjson" +
+                    $"&token={token}";
+
+
+                var response =
+                    await httpClient.GetStringAsync(
+                        url,
+                        cancellationToken);
+
+
+                return Results.Content(
+                    response,
                     "application/json");
             });
 
