@@ -30,12 +30,12 @@ public static class ArcGisOAuthEndpoints
                 string state,
                 OAuthStateStore store,
                 ArcGisOAuthService oauth,
-                ArcGisTokenStore tokenStore
+                ArcGisTokenStore tokenStore,
+                ArcGisTokenPersistence persistence
             ) =>
             {
                 var savedState =
                     store.Take(state);
-
 
                 if (savedState is null)
                 {
@@ -43,12 +43,10 @@ public static class ArcGisOAuthEndpoints
                         "Invalid OAuth state.");
                 }
 
-
                 var token =
                     await oauth.ExchangeCodeAsync(
                         code,
                         savedState.CodeVerifier);
-
 
                 if (token is null)
                 {
@@ -56,8 +54,7 @@ public static class ArcGisOAuthEndpoints
                         "Token exchange failed.");
                 }
 
-
-                tokenStore.Save(
+                var userToken =
                     new ArcGisUserToken
                     {
                         AccessToken =
@@ -69,12 +66,26 @@ public static class ArcGisOAuthEndpoints
                         ExpiresAt =
                             DateTime.UtcNow
                                 .AddSeconds(token.ExpiresIn)
-                    });
+                    };
 
+                tokenStore.Save(userToken);
+
+                await persistence.SaveAsync(userToken);
 
                 return Results.Ok(
                     "ArcGIS authentication successful.");
             });
+
+            app.MapGet(
+            "/api/arcgis/auth/status",
+            (ArcGisTokenStore tokenStore) =>
+            {
+                return Results.Ok(new
+                {
+                    authenticated = tokenStore.Get() is not null
+                });
+            });
+
 
     }
 }

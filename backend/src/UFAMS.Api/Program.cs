@@ -114,6 +114,23 @@ app.MapWorkOrderEndpoints();
 app.MapArcGisEndpoints();
 app.MapArcGisSyncEndpoints();
 app.MapArcGisOAuthEndpoints();
+using (var scope = app.Services.CreateScope())
+{
+    var persistence =
+        scope.ServiceProvider.GetRequiredService<ArcGisTokenPersistence>();
+
+    var tokenStore =
+        scope.ServiceProvider.GetRequiredService<ArcGisTokenStore>();
+
+    var token =
+        await persistence.LoadAsync();
+
+    if (token is not null &&
+        token.ExpiresAt > DateTime.UtcNow)
+    {
+        tokenStore.Save(token);
+    }
+}
 app.Run();
 
 public partial class Program

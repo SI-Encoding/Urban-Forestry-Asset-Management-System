@@ -109,4 +109,30 @@ public class ArcGisOAuthService
 
     return token;
 }
+
+public async Task<ArcGisTokenResponse?> RefreshTokenAsync(
+    string refreshToken)
+{
+    using var client = new HttpClient();
+
+    var form = new Dictionary<string, string>
+    {
+        ["client_id"] = _options.ClientId,
+
+        ["grant_type"] = "refresh_token",
+
+        ["refresh_token"] = refreshToken,
+
+        ["f"] = "json"
+    };
+
+    var response =
+        await client.PostAsync(
+            $"{_options.PortalUrl}/sharing/rest/oauth2/token",
+            new FormUrlEncodedContent(form));
+
+    response.EnsureSuccessStatusCode();
+
+    return await response.Content.ReadFromJsonAsync<ArcGisTokenResponse>();
+}
 }

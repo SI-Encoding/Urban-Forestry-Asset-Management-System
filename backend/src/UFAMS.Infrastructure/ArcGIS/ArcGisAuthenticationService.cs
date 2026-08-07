@@ -13,17 +13,24 @@ public sealed class ArcGisAuthenticationService
 
     private readonly ArcGisTokenStore _tokenStore;
 
+    private readonly ArcGisTokenPersistence _persistence;
+
     private readonly ArcGisOAuthOptions _options;
+
 
     public ArcGisAuthenticationService(
         HttpClient httpClient,
         ArcGisTokenStore tokenStore,
+        ArcGisTokenPersistence persistence,
         IOptions<ArcGisOAuthOptions> options)
     {
         _httpClient = httpClient;
         _tokenStore = tokenStore;
+        _persistence = persistence;
         _options = options.Value;
     }
+
+
 
     public async Task<string> GetAccessTokenAsync(
         CancellationToken cancellationToken = default)
@@ -39,10 +46,12 @@ public sealed class ArcGisAuthenticationService
         }
 
 
+
         if (token.ExpiresAt > DateTime.UtcNow)
         {
             return token.AccessToken;
         }
+
 
 
         return await RefreshTokenAsync(
@@ -50,12 +59,16 @@ public sealed class ArcGisAuthenticationService
             cancellationToken);
     }
 
+
+
+
+
     private async Task<string> RefreshTokenAsync(
         string refreshToken,
         CancellationToken cancellationToken)
     {
         var form =
-            new Dictionary<string,string>
+            new Dictionary<string, string>
             {
                 ["client_id"] =
                     _options.ClientId,
@@ -71,6 +84,7 @@ public sealed class ArcGisAuthenticationService
             };
 
 
+
         var response =
             await _httpClient.PostAsync(
                 $"{_options.PortalUrl}/sharing/rest/oauth2/token",
@@ -78,7 +92,9 @@ public sealed class ArcGisAuthenticationService
                 cancellationToken);
 
 
+
         response.EnsureSuccessStatusCode();
+
 
 
         var token =
@@ -88,11 +104,13 @@ public sealed class ArcGisAuthenticationService
                         cancellationToken);
 
 
+
         if (token is null)
         {
             throw new InvalidOperationException(
                 "Unable to refresh ArcGIS token.");
         }
+
 
 
         var updatedToken =
@@ -110,7 +128,16 @@ public sealed class ArcGisAuthenticationService
             };
 
 
+
+        // Update memory
         _tokenStore.Save(updatedToken);
+
+
+        // Update disk
+        await _persistence.SaveAsync(
+            updatedToken,
+            cancellationToken);
+
 
 
         return updatedToken.AccessToken;

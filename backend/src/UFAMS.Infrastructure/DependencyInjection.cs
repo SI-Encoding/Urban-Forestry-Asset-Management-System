@@ -5,6 +5,7 @@ using UFAMS.Infrastructure.Persistence;
 using UFAMS.Application.Interfaces;
 using UFAMS.Infrastructure.Repositories;
 using UFAMS.Application.Features.ArcGisSync;
+using UFAMS.Infrastructure.ArcGIS;
 
 namespace UFAMS.Infrastructure;
 
@@ -26,6 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<SpatialDataSyncService>();
+        services.AddSingleton<ArcGisTokenStore>();
+        services.AddSingleton<OAuthStateStore>();
+        services.AddSingleton<ArcGisTokenPersistence>();
         return services;
     }
 }
