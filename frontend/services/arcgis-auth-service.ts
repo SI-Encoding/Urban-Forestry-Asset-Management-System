@@ -1,5 +1,6 @@
 import {
     apiFetch,
+    apiPost,
 } from "./api-client";
 
 
@@ -33,6 +34,15 @@ export function getArcGisLoginUrl(): string {
         `${apiUrl}`
         +
         "/api/arcgis/auth/login"
+    );
+
+}
+
+export async function logoutArcGis(): Promise<void> {
+
+    await apiPost(
+        "/api/arcgis/auth/logout",
+        {}
     );
 
 }

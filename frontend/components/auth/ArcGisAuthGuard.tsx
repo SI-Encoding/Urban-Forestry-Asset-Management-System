@@ -9,6 +9,7 @@ import {
 import {
     getArcGisAuthStatus,
     getArcGisLoginUrl,
+    logoutArcGis,
 } from "@/services/arcgis-auth-service";
 
 
@@ -34,7 +35,13 @@ export function ArcGisAuthGuard({
         useState(false);
 
 
+    async function disconnect() {
 
+        await logoutArcGis();
+
+        setAuthenticated(false);
+
+    }
     useEffect(() => {
 
         async function checkAuth() {
@@ -157,9 +164,32 @@ export function ArcGisAuthGuard({
 
     return (
 
-        <>
+        <div className="space-y-4">
+
+            <div className="flex justify-end">
+
+                <button
+                    className="
+                        rounded-md
+                        border
+                        px-4
+                        py-2
+                        text-sm
+                        hover:bg-muted
+                    "
+                    onClick={disconnect}
+                >
+
+                    Disconnect ArcGIS
+
+                </button>
+
+            </div>
+
+
             {children}
-        </>
+
+        </div>
 
     );
 

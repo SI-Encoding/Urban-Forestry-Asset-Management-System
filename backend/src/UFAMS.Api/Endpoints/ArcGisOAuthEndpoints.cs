@@ -77,15 +77,30 @@ public static class ArcGisOAuthEndpoints
             });
 
             app.MapGet(
-            "/api/arcgis/auth/status",
-            (ArcGisTokenStore tokenStore) =>
-            {
-                return Results.Ok(new
+                "/api/arcgis/auth/status",
+                (ArcGisTokenStore tokenStore) =>
                 {
-                    authenticated = tokenStore.Get() is not null
+                    return Results.Ok(new
+                    {
+                        authenticated = tokenStore.Get() is not null
+                    });
                 });
-            });
 
+                app.MapPost(
+                    "/api/arcgis/auth/logout",
+                    (
+                        ArcGisTokenStore tokenStore,
+                        ArcGisTokenPersistence persistence
+                    ) =>
+                    {
+                        tokenStore.Clear();
 
+                        persistence.Delete();
+
+                        return Results.Ok(new
+                        {
+                            authenticated = false
+                        });
+                    });
     }
 }
