@@ -4,6 +4,10 @@ import {
     ArcGisSyncPageClient,
 } from "@/components/arcgis-sync/ArcGisSyncPageClient";
 
+import {
+    ArcGisAuthGuard,
+} from "@/components/auth/ArcGisAuthGuard";
+
 
 export default function ArcGisSyncPage() {
 
@@ -21,7 +25,11 @@ export default function ArcGisSyncPage() {
                 "
             >
 
-                <ArcGisSyncPageClient />
+                <ArcGisAuthGuard>
+
+                    <ArcGisSyncPageClient />
+
+                </ArcGisAuthGuard>
 
             </div>
 

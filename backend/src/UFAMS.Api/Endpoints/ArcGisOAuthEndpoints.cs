@@ -72,8 +72,8 @@ public static class ArcGisOAuthEndpoints
 
                 await persistence.SaveAsync(userToken);
 
-                return Results.Ok(
-                    "ArcGIS authentication successful.");
+                return Results.Redirect(
+                    "http://localhost:3000/arcgis-sync");
             });
 
             app.MapGet(
