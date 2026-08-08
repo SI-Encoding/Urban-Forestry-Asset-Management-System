@@ -74,7 +74,6 @@ export function ArcGisSyncPageClient() {
 
 
     async function applySync() {
-console.log("Apply clicked");
 
         setApplying(true);
 

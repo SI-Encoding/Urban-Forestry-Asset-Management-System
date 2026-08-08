@@ -41,6 +41,27 @@ public static class ArcGisSyncEndpoints
         .WithDescription(
             "Applies ArcGIS changes to UFAMS.");
 
+        app.MapPost(
+            "/arcgis/sync/apply/{assetTag}",
+            async (
+                string assetTag,
+                SpatialDataSyncService syncService,
+                CancellationToken cancellationToken) =>
+            {
+                if (string.IsNullOrWhiteSpace(assetTag))
+                {
+                    return Results.BadRequest(
+                        "Asset tag is required.");
+                }
+
+                var result =
+                    await syncService.ApplySingleAsync(
+                        assetTag,
+                        cancellationToken);
+
+                return Results.Ok(result);
+            });
+        
         return app;
     }
 }

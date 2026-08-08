@@ -81,6 +81,25 @@ public class Tree : BaseEntity
         MarkUpdated();
     }
 
+    public void ChangeSpecies(Species species)
+    {
+        Species = species
+            ?? throw new ArgumentNullException(nameof(species));
+
+        SpeciesId = species.Id;
+
+        MarkUpdated();
+    }
+
+    public void ChangePark(Park park)
+    {
+        Park = park
+            ?? throw new ArgumentNullException(nameof(park));
+
+        ParkId = park.Id;
+
+        MarkUpdated();
+    }
     public void Relocate(
         Park park,
         GeoCoordinate location)

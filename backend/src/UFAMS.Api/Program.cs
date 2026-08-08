@@ -70,8 +70,6 @@ builder.Services.AddScoped<
     IArcGisFeatureProvider,
     ArcGisFeatureServiceAdapter>();
 
-builder.Services.AddSingleton<OAuthStateStore>();
-
 builder.Services
     .Configure<ArcGisOAuthOptions>(
         builder.Configuration.GetSection("ArcGis"));
