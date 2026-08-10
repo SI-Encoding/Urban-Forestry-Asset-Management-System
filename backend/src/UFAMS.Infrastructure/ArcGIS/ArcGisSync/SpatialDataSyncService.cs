@@ -25,20 +25,22 @@ public sealed class SpatialDataSyncService
 
     private readonly IUnitOfWork _unitOfWork;
 
-
+    private readonly ISyncAuditRepository _syncAuditRepository;
 
     public SpatialDataSyncService(
         IArcGisFeatureProvider provider,
         ITreeRepository treeRepository,
         ISpeciesRepository speciesRepository,
         IParkRepository parkRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISyncAuditRepository syncAuditRepository)
     {
         _provider = provider;
         _treeRepository = treeRepository;
         _speciesRepository = speciesRepository;
         _parkRepository = parkRepository;
         _unitOfWork = unitOfWork;
+        _syncAuditRepository = syncAuditRepository;
     }
 
 
@@ -203,7 +205,16 @@ public sealed class SpatialDataSyncService
 public async Task<SpatialSyncResult> ApplyAsync(
     CancellationToken cancellationToken = default)
 {
-    var actions = new List<SpatialSyncAction>();
+    var audit =
+        new SyncAudit(
+            DateTime.UtcNow);
+
+    await _syncAuditRepository.AddAsync(
+        audit,
+        cancellationToken);
+
+    var actions =
+        new List<SpatialSyncAction>();
 
     var features =
         await _provider.GetFeaturesAsync(
@@ -224,9 +235,18 @@ public async Task<SpatialSyncResult> ApplyAsync(
     int created = 0;
     int updated = 0;
     int unchanged = 0;
+    int failed = 0;
+
 
     foreach (var feature in features)
     {
+        /*
+         * Find the existing UFAMS tree.
+         *
+         * Prefer ArcGIS Feature ID when available,
+         * otherwise fall back to AssetTag.
+         */
+
         var existingTree =
             trees.FirstOrDefault(
                 tree =>
@@ -236,23 +256,26 @@ public async Task<SpatialSyncResult> ApplyAsync(
                         feature.AssetTag,
                         StringComparison.OrdinalIgnoreCase));
 
-        if (
-            existingTree is not null &&
-            string.IsNullOrWhiteSpace(
-                existingTree.ArcGisFeatureId))
-        {
-            existingTree.AssignArcGisFeatureId(
-                feature.Id);
-        }
+
+        /*
+         * ============================================================
+         * CREATE
+         * ============================================================
+         */
 
         if (existingTree is null)
         {
+            /*
+             * Resolve species and park before creating anything.
+             */
+
             var matchedSpecies =
                 species.FirstOrDefault(
                     s =>
                         s.CommonName.Equals(
                             feature.Species,
                             StringComparison.OrdinalIgnoreCase));
+
 
             var matchedPark =
                 parks.FirstOrDefault(
@@ -261,15 +284,21 @@ public async Task<SpatialSyncResult> ApplyAsync(
                             feature.Park,
                             StringComparison.OrdinalIgnoreCase));
 
-            if (
-                matchedSpecies is null ||
-                matchedPark is null)
+
+            /*
+             * Validate species.
+             */
+
+            if (matchedSpecies is null)
             {
+                var reason =
+                    $"ArcGIS species '{feature.Species}' could not be matched in UFAMS.";
+
                 actions.Add(
                     new SpatialSyncAction(
                         Action: "Failed",
                         AssetTag: feature.AssetTag,
-                        Reason: "Species or park could not be matched",
+                        Reason: reason,
                         UfamsSpecies: null,
                         ArcGisSpecies: feature.Species,
                         UfamsPark: null,
@@ -281,8 +310,101 @@ public async Task<SpatialSyncResult> ApplyAsync(
                         UfamsLongitude: null,
                         ArcGisLongitude: feature.Longitude));
 
+                audit.AddEntry(
+                    new SyncAuditEntry(
+                        feature.AssetTag,
+                        "Failed",
+                        reason));
+
+                failed++;
+
                 continue;
             }
+
+
+            /*
+             * Validate park.
+             */
+
+            if (matchedPark is null)
+            {
+                var reason =
+                    $"ArcGIS park '{feature.Park}' could not be matched in UFAMS.";
+
+                actions.Add(
+                    new SpatialSyncAction(
+                        Action: "Failed",
+                        AssetTag: feature.AssetTag,
+                        Reason: reason,
+                        UfamsSpecies: null,
+                        ArcGisSpecies: feature.Species,
+                        UfamsPark: null,
+                        ArcGisPark: feature.Park,
+                        UfamsHealthStatus: null,
+                        ArcGisHealthStatus: feature.HealthStatus,
+                        UfamsLatitude: null,
+                        ArcGisLatitude: feature.Latitude,
+                        UfamsLongitude: null,
+                        ArcGisLongitude: feature.Longitude));
+
+                audit.AddEntry(
+                    new SyncAuditEntry(
+                        feature.AssetTag,
+                        "Failed",
+                        reason));
+
+                failed++;
+
+                continue;
+            }
+
+
+            /*
+             * Validate health status.
+             */
+
+            if (
+                !Enum.TryParse<TreeHealthStatus>(
+                    feature.HealthStatus,
+                    true,
+                    out var healthStatus))
+            {
+                var reason =
+                    $"Invalid ArcGIS health status: {feature.HealthStatus}";
+
+                actions.Add(
+                    new SpatialSyncAction(
+                        Action: "Failed",
+                        AssetTag: feature.AssetTag,
+                        Reason: reason,
+                        UfamsSpecies: null,
+                        ArcGisSpecies: feature.Species,
+                        UfamsPark: null,
+                        ArcGisPark: feature.Park,
+                        UfamsHealthStatus: null,
+                        ArcGisHealthStatus: feature.HealthStatus,
+                        UfamsLatitude: null,
+                        ArcGisLatitude: feature.Latitude,
+                        UfamsLongitude: null,
+                        ArcGisLongitude: feature.Longitude));
+
+                audit.AddEntry(
+                    new SyncAuditEntry(
+                        feature.AssetTag,
+                        "Failed",
+                        reason));
+
+                failed++;
+
+                continue;
+            }
+
+
+            /*
+             * All validation passed.
+             *
+             * Now it is safe to create the Tree.
+             */
 
             var tree =
                 new Tree(
@@ -292,533 +414,1170 @@ public async Task<SpatialSyncResult> ApplyAsync(
                     new GeoCoordinate(
                         feature.Latitude,
                         feature.Longitude),
-                    Enum.Parse<TreeHealthStatus>(
-                        feature.HealthStatus),
+                    healthStatus,
                     DateOnly.FromDateTime(
                         DateTime.Today),
                     0,
                     0);
 
+
             tree.AssignArcGisFeatureId(
                 feature.Id);
+
 
             await _treeRepository.AddAsync(
                 tree,
                 cancellationToken);
 
+
             created++;
+
 
             actions.Add(
                 new SpatialSyncAction(
                     Action: "Create",
                     AssetTag: feature.AssetTag,
                     Reason: "Tree created in UFAMS",
-                    UfamsSpecies: matchedSpecies.CommonName,
-                    ArcGisSpecies: feature.Species,
-                    UfamsPark: matchedPark.Name,
-                    ArcGisPark: feature.Park,
-                    UfamsHealthStatus: tree.HealthStatus.ToString(),
-                    ArcGisHealthStatus: feature.HealthStatus,
-                    UfamsLatitude: tree.Location.Latitude,
-                    ArcGisLatitude: feature.Latitude,
-                    UfamsLongitude: tree.Location.Longitude,
-                    ArcGisLongitude: feature.Longitude));
+                    UfamsSpecies:
+                        matchedSpecies.CommonName,
+                    ArcGisSpecies:
+                        feature.Species,
+                    UfamsPark:
+                        matchedPark.Name,
+                    ArcGisPark:
+                        feature.Park,
+                    UfamsHealthStatus:
+                        tree.HealthStatus.ToString(),
+                    ArcGisHealthStatus:
+                        feature.HealthStatus,
+                    UfamsLatitude:
+                        tree.Location.Latitude,
+                    ArcGisLatitude:
+                        feature.Latitude,
+                    UfamsLongitude:
+                        tree.Location.Longitude,
+                    ArcGisLongitude:
+                        feature.Longitude));
+
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Create",
+                    "Tree created in UFAMS"));
+
 
             continue;
         }
 
-        var reasons = new List<string>();
 
-        if (!existingTree.Species.CommonName.Equals(
+        /*
+         * ============================================================
+         * EXISTING TREE
+         * ============================================================
+         *
+         * Capture the original values before making any changes.
+         */
+
+        var originalUfamsSpecies =
+            existingTree.Species.CommonName;
+
+        var originalUfamsPark =
+            existingTree.Park.Name;
+
+        var originalUfamsHealthStatus =
+            existingTree.HealthStatus.ToString();
+
+        var originalUfamsLatitude =
+            existingTree.Location.Latitude;
+
+        var originalUfamsLongitude =
+            existingTree.Location.Longitude;
+
+
+        /*
+         * ============================================================
+         * VALIDATION PHASE
+         * ============================================================
+         *
+         * Nothing is changed on the Tree during this section.
+         */
+
+
+        /*
+         * Resolve species.
+         */
+
+        var matchedSpeciesForUpdate =
+            species.FirstOrDefault(
+                s =>
+                    s.CommonName.Equals(
+                        feature.Species,
+                        StringComparison.OrdinalIgnoreCase));
+
+
+        /*
+         * Resolve park.
+         */
+
+        var matchedParkForUpdate =
+            parks.FirstOrDefault(
+                p =>
+                    p.Name.Equals(
+                        feature.Park,
+                        StringComparison.OrdinalIgnoreCase));
+
+
+        /*
+         * Validate species mismatch.
+         */
+
+        if (
+            !originalUfamsSpecies.Equals(
+                feature.Species,
+                StringComparison.OrdinalIgnoreCase)
+            &&
+            matchedSpeciesForUpdate is null)
+        {
+            var reason =
+                $"ArcGIS species '{feature.Species}' could not be matched in UFAMS.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: feature.AssetTag,
+                    Reason: reason,
+                    UfamsSpecies:
+                        originalUfamsSpecies,
+                    ArcGisSpecies:
+                        feature.Species,
+                    UfamsPark:
+                        originalUfamsPark,
+                    ArcGisPark:
+                        feature.Park,
+                    UfamsHealthStatus:
+                        originalUfamsHealthStatus,
+                    ArcGisHealthStatus:
+                        feature.HealthStatus,
+                    UfamsLatitude:
+                        originalUfamsLatitude,
+                    ArcGisLatitude:
+                        feature.Latitude,
+                    UfamsLongitude:
+                        originalUfamsLongitude,
+                    ArcGisLongitude:
+                        feature.Longitude));
+
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Failed",
+                    reason));
+
+
+            failed++;
+
+            continue;
+        }
+
+
+        /*
+         * Validate park mismatch.
+         */
+
+        if (
+            !originalUfamsPark.Equals(
+                feature.Park,
+                StringComparison.OrdinalIgnoreCase)
+            &&
+            matchedParkForUpdate is null)
+        {
+            var reason =
+                $"ArcGIS park '{feature.Park}' could not be matched in UFAMS.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: feature.AssetTag,
+                    Reason: reason,
+                    UfamsSpecies:
+                        originalUfamsSpecies,
+                    ArcGisSpecies:
+                        feature.Species,
+                    UfamsPark:
+                        originalUfamsPark,
+                    ArcGisPark:
+                        feature.Park,
+                    UfamsHealthStatus:
+                        originalUfamsHealthStatus,
+                    ArcGisHealthStatus:
+                        feature.HealthStatus,
+                    UfamsLatitude:
+                        originalUfamsLatitude,
+                    ArcGisLatitude:
+                        feature.Latitude,
+                    UfamsLongitude:
+                        originalUfamsLongitude,
+                    ArcGisLongitude:
+                        feature.Longitude));
+
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Failed",
+                    reason));
+
+
+            failed++;
+
+            continue;
+        }
+
+
+        /*
+         * Validate health status.
+         */
+
+        var healthStatusForUpdate =
+            existingTree.HealthStatus;
+
+
+        if (
+            !originalUfamsHealthStatus.Equals(
+                feature.HealthStatus,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            if (
+                !Enum.TryParse<TreeHealthStatus>(
+                    feature.HealthStatus,
+                    true,
+                    out healthStatusForUpdate))
+            {
+                var reason =
+                    $"Invalid ArcGIS health status: {feature.HealthStatus}";
+
+                actions.Add(
+                    new SpatialSyncAction(
+                        Action: "Failed",
+                        AssetTag: feature.AssetTag,
+                        Reason: reason,
+                        UfamsSpecies:
+                            originalUfamsSpecies,
+                        ArcGisSpecies:
+                            feature.Species,
+                        UfamsPark:
+                            originalUfamsPark,
+                        ArcGisPark:
+                            feature.Park,
+                        UfamsHealthStatus:
+                            originalUfamsHealthStatus,
+                        ArcGisHealthStatus:
+                            feature.HealthStatus,
+                        UfamsLatitude:
+                            originalUfamsLatitude,
+                        ArcGisLatitude:
+                            feature.Latitude,
+                        UfamsLongitude:
+                            originalUfamsLongitude,
+                        ArcGisLongitude:
+                            feature.Longitude));
+
+
+                audit.AddEntry(
+                    new SyncAuditEntry(
+                        feature.AssetTag,
+                        "Failed",
+                        reason));
+
+
+                failed++;
+
+                continue;
+            }
+        }
+
+
+        /*
+         * Determine whether the location changed.
+         */
+
+        var locationChanged =
+            LocationChanged(
+                existingTree,
+                feature);
+
+
+        /*
+         * ============================================================
+         * DETERMINE CHANGES
+         * ============================================================
+         */
+
+        var reasons =
+            new List<string>();
+
+
+        if (
+            !originalUfamsSpecies.Equals(
                 feature.Species,
                 StringComparison.OrdinalIgnoreCase))
         {
-            var matchedSpecies =
-                species.FirstOrDefault(
-                    s =>
-                        s.CommonName.Equals(
-                            feature.Species,
-                            StringComparison.OrdinalIgnoreCase));
-
-            if (matchedSpecies is not null)
-            {
-                existingTree.ChangeSpecies(
-                    matchedSpecies);
-
-                reasons.Add(
-                    "Species updated");
-            }
+            reasons.Add(
+                "Species updated");
         }
 
-        if (!existingTree.Park.Name.Equals(
+
+        if (
+            !originalUfamsPark.Equals(
                 feature.Park,
                 StringComparison.OrdinalIgnoreCase))
         {
-            var matchedPark =
-                parks.FirstOrDefault(
-                    p =>
-                        p.Name.Equals(
-                            feature.Park,
-                            StringComparison.OrdinalIgnoreCase));
-
-            if (matchedPark is not null)
-            {
-                existingTree.ChangePark(
-                    matchedPark);
-
-                reasons.Add(
-                    "Park updated");
-            }
+            reasons.Add(
+                "Park updated");
         }
 
-        if (
-            existingTree.HealthStatus.ToString()
-            !=
-            feature.HealthStatus)
-        {
-            existingTree.UpdateHealth(
-                Enum.Parse<TreeHealthStatus>(
-                    feature.HealthStatus));
 
+        if (
+            !originalUfamsHealthStatus.Equals(
+                feature.HealthStatus,
+                StringComparison.OrdinalIgnoreCase))
+        {
             reasons.Add(
                 "Health status updated");
         }
 
-        if (
-            LocationChanged(
-                existingTree,
-                feature))
-        {
-            existingTree.Relocate(
-                existingTree.Park,
-                new GeoCoordinate(
-                    feature.Latitude,
-                    feature.Longitude));
 
+        if (locationChanged)
+        {
             reasons.Add(
                 "Location updated");
         }
 
-        if (reasons.Count > 0)
+
+        /*
+         * ============================================================
+         * UNCHANGED
+         * ============================================================
+         */
+
+        if (reasons.Count == 0)
         {
-            updated++;
+            /*
+             * The tree itself does not need updating.
+             *
+             * However, if this is the first time we have seen
+             * this ArcGIS feature, we still need to establish
+             * the external identity relationship.
+             */
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    existingTree.ArcGisFeatureId))
+            {
+                existingTree.AssignArcGisFeatureId(
+                    feature.Id);
+            }
+
+
+            unchanged++;
+
 
             actions.Add(
                 new SpatialSyncAction(
-                    Action: "Update",
+                    Action: "Unchanged",
                     AssetTag: feature.AssetTag,
-                    Reason: string.Join(", ", reasons),
-                    UfamsSpecies: existingTree.Species.CommonName,
-                    ArcGisSpecies: feature.Species,
-                    UfamsPark: existingTree.Park.Name,
-                    ArcGisPark: feature.Park,
-                    UfamsHealthStatus: existingTree.HealthStatus.ToString(),
-                    ArcGisHealthStatus: feature.HealthStatus,
-                    UfamsLatitude: existingTree.Location.Latitude,
-                    ArcGisLatitude: feature.Latitude,
-                    UfamsLongitude: existingTree.Location.Longitude,
-                    ArcGisLongitude: feature.Longitude));
+                    Reason: "No changes detected",
+                    UfamsSpecies:
+                        originalUfamsSpecies,
+                    ArcGisSpecies:
+                        feature.Species,
+                    UfamsPark:
+                        originalUfamsPark,
+                    ArcGisPark:
+                        feature.Park,
+                    UfamsHealthStatus:
+                        originalUfamsHealthStatus,
+                    ArcGisHealthStatus:
+                        feature.HealthStatus,
+                    UfamsLatitude:
+                        originalUfamsLatitude,
+                    ArcGisLatitude:
+                        feature.Latitude,
+                    UfamsLongitude:
+                        originalUfamsLongitude,
+                    ArcGisLongitude:
+                        feature.Longitude));
+
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Unchanged",
+                    "No changes detected"));
+
 
             continue;
         }
 
-        unchanged++;
+
+        /*
+         * ============================================================
+         * APPLY VALIDATED CHANGES
+         * ============================================================
+         *
+         * At this point ALL validation has passed.
+         * It is now safe to modify the Tree.
+         */
+
+
+        if (
+            !originalUfamsSpecies.Equals(
+                feature.Species,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            existingTree.ChangeSpecies(
+                matchedSpeciesForUpdate!);
+        }
+
+
+        if (
+            !originalUfamsPark.Equals(
+                feature.Park,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            existingTree.ChangePark(
+                matchedParkForUpdate!);
+        }
+
+
+        if (
+            !originalUfamsHealthStatus.Equals(
+                feature.HealthStatus,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            existingTree.UpdateHealth(
+                healthStatusForUpdate);
+        }
+
+
+        if (locationChanged)
+        {
+            existingTree.Relocate(
+                matchedParkForUpdate ?? existingTree.Park,
+                new GeoCoordinate(
+                    feature.Latitude,
+                    feature.Longitude));
+        }
+
+
+        /*
+         * Assign ArcGIS Feature ID if it has not been established.
+         */
+
+        if (
+            string.IsNullOrWhiteSpace(
+                existingTree.ArcGisFeatureId))
+        {
+            existingTree.AssignArcGisFeatureId(
+                feature.Id);
+        }
+
+
+        /*
+         * Successful update.
+         */
+
+        updated++;
+
+
+        var updateReason =
+            string.Join(
+                ", ",
+                reasons);
+
 
         actions.Add(
             new SpatialSyncAction(
-                Action: "Unchanged",
+                Action: "Update",
                 AssetTag: feature.AssetTag,
-                Reason: "No changes detected",
-                UfamsSpecies: existingTree.Species.CommonName,
-                ArcGisSpecies: feature.Species,
-                UfamsPark: existingTree.Park.Name,
-                ArcGisPark: feature.Park,
-                UfamsHealthStatus: existingTree.HealthStatus.ToString(),
-                ArcGisHealthStatus: feature.HealthStatus,
-                UfamsLatitude: existingTree.Location.Latitude,
-                ArcGisLatitude: feature.Latitude,
-                UfamsLongitude: existingTree.Location.Longitude,
-                ArcGisLongitude: feature.Longitude));
+                Reason: updateReason,
+                UfamsSpecies:
+                    existingTree.Species.CommonName,
+                ArcGisSpecies:
+                    feature.Species,
+                UfamsPark:
+                    existingTree.Park.Name,
+                ArcGisPark:
+                    feature.Park,
+                UfamsHealthStatus:
+                    existingTree.HealthStatus.ToString(),
+                ArcGisHealthStatus:
+                    feature.HealthStatus,
+                UfamsLatitude:
+                    existingTree.Location.Latitude,
+                ArcGisLatitude:
+                    feature.Latitude,
+                UfamsLongitude:
+                    existingTree.Location.Longitude,
+                ArcGisLongitude:
+                    feature.Longitude));
+
+
+        audit.AddEntry(
+            new SyncAuditEntry(
+                feature.AssetTag,
+                "Update",
+                updateReason));
     }
 
 
+    /*
+     * ================================================================
+     * COMPLETE AUDIT
+     * ================================================================
+     */
+
+    audit.Complete(
+        created,
+        updated,
+        failed,
+        unchanged);
 
 
+    /*
+     * ================================================================
+     * SINGLE DATABASE SAVE
+     * ================================================================
+     *
+     * SyncAudit, SyncAuditEntry, Tree changes, and newly-created
+     * Trees are all tracked by the same UFAMSDbContext.
+     *
+     * Therefore this single SaveChangesAsync call persists the
+     * entire synchronization operation together.
+     */
 
-        await _unitOfWork.SaveChangesAsync(
-            cancellationToken);
+    await _unitOfWork.SaveChangesAsync(
+        cancellationToken);
 
 
+    /*
+     * ================================================================
+     * RETURN RESULT
+     * ================================================================
+     */
 
-
-
-        return new SpatialSyncResult(
-            Created: created,
-            Updated: updated,
-            Deleted: 0,
-            Unchanged: unchanged,
-            Actions: actions);
-    }
-
+    return new SpatialSyncResult(
+        Created: created,
+        Updated: updated,
+        Deleted: 0,
+        Unchanged: unchanged,
+        Actions: actions);
+}
 public async Task<SpatialSyncResult> ApplySingleAsync(
     string assetTag,
     CancellationToken cancellationToken = default)
 {
-    var actions =
-        new List<SpatialSyncAction>();
+    await _unitOfWork.BeginTransactionAsync(
+        cancellationToken);
 
-
-    if (string.IsNullOrWhiteSpace(assetTag))
+    try
     {
-        actions.Add(
-            new SpatialSyncAction(
-                Action: "Failed",
-                AssetTag: assetTag,
-                Reason: "Asset tag is required.",
-                UfamsSpecies: null,
-                ArcGisSpecies: null,
-                UfamsPark: null,
-                ArcGisPark: null,
-                UfamsHealthStatus: null,
-                ArcGisHealthStatus: null,
-                UfamsLatitude: null,
-                ArcGisLatitude: null,
-                UfamsLongitude: null,
-                ArcGisLongitude: null));
+        var audit =
+            new SyncAudit(
+                DateTime.UtcNow);
 
-        return new SpatialSyncResult(
-            Created: 0,
-            Updated: 0,
-            Deleted: 0,
-            Unchanged: 0,
-            Actions: actions);
-    }
-
-
-    var features =
-        await _provider.GetFeaturesAsync(
+        await _syncAuditRepository.AddAsync(
+            audit,
             cancellationToken);
 
+        var actions =
+            new List<SpatialSyncAction>();
 
-    var feature =
-        features.FirstOrDefault(
-            f =>
-                f.AssetTag.Equals(
+
+        /*
+         * Asset tag validation
+         */
+
+        if (string.IsNullOrWhiteSpace(assetTag))
+        {
+            var reason =
+                "Asset tag is required.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: assetTag,
+                    Reason: reason,
+                    UfamsSpecies: null,
+                    ArcGisSpecies: null,
+                    UfamsPark: null,
+                    ArcGisPark: null,
+                    UfamsHealthStatus: null,
+                    ArcGisHealthStatus: null,
+                    UfamsLatitude: null,
+                    ArcGisLatitude: null,
+                    UfamsLongitude: null,
+                    ArcGisLongitude: null));
+
+            audit.AddEntry(
+                new SyncAuditEntry(
                     assetTag,
-                    StringComparison.OrdinalIgnoreCase));
+                    "Failed",
+                    reason));
 
+            audit.Complete(
+                0,
+                0,
+                1,
+                0);
 
-    if (feature is null)
-    {
-        actions.Add(
-            new SpatialSyncAction(
-                Action: "Failed",
-                AssetTag: assetTag,
-                Reason: "Tree was not found in ArcGIS.",
-                UfamsSpecies: null,
-                ArcGisSpecies: null,
-                UfamsPark: null,
-                ArcGisPark: null,
-                UfamsHealthStatus: null,
-                ArcGisHealthStatus: null,
-                UfamsLatitude: null,
-                ArcGisLatitude: null,
-                UfamsLongitude: null,
-                ArcGisLongitude: null));
-
-        return new SpatialSyncResult(
-            Created: 0,
-            Updated: 0,
-            Deleted: 0,
-            Unchanged: 0,
-            Actions: actions);
-    }
-
-
-    var trees =
-        await _treeRepository.GetAllAsync(
-            cancellationToken);
-
-
-    var species =
-        await _speciesRepository.GetAllAsync(
-            cancellationToken);
-
-
-    var parks =
-        await _parkRepository.GetAllAsync(
-            cancellationToken);
-
-
-    var existingTree =
-        trees.FirstOrDefault(
-            tree =>
-                tree.ArcGisFeatureId == feature.Id
-                ||
-                tree.AssetTag.Equals(
-                    feature.AssetTag,
-                    StringComparison.OrdinalIgnoreCase));
-
-
-    if (existingTree is null)
-    {
-        actions.Add(
-            new SpatialSyncAction(
-                Action: "Failed",
-                AssetTag: feature.AssetTag,
-                Reason: "Tree does not exist in UFAMS.",
-                UfamsSpecies: null,
-                ArcGisSpecies: feature.Species,
-                UfamsPark: null,
-                ArcGisPark: feature.Park,
-                UfamsHealthStatus: null,
-                ArcGisHealthStatus: feature.HealthStatus,
-                UfamsLatitude: null,
-                ArcGisLatitude: feature.Latitude,
-                UfamsLongitude: null,
-                ArcGisLongitude: feature.Longitude));
-
-        return new SpatialSyncResult(
-            Created: 0,
-            Updated: 0,
-            Deleted: 0,
-            Unchanged: 0,
-            Actions: actions);
-    }
-
-
-    /*
-     * Capture the UFAMS values BEFORE making any changes.
-     * These are what we want to show in the sync result.
-     */
-
-    var originalUfamsSpecies =
-        existingTree.Species.CommonName;
-
-    var originalUfamsPark =
-        existingTree.Park.Name;
-
-    var originalUfamsHealthStatus =
-        existingTree.HealthStatus.ToString();
-
-    var originalUfamsLatitude =
-        existingTree.Location.Latitude;
-
-    var originalUfamsLongitude =
-        existingTree.Location.Longitude;
-
-
-    bool arcGisFeatureIdAssigned = false;
-
-
-    if (
-        string.IsNullOrWhiteSpace(
-            existingTree.ArcGisFeatureId))
-    {
-        existingTree.AssignArcGisFeatureId(
-            feature.Id);
-
-        arcGisFeatureIdAssigned = true;
-    }
-
-
-    var reasons =
-        new List<string>();
-
-
-    /*
-     * Species
-     */
-
-    var matchedSpecies =
-        species.FirstOrDefault(
-            s =>
-                s.CommonName.Equals(
-                    feature.Species,
-                    StringComparison.OrdinalIgnoreCase));
-
-
-    if (
-        !originalUfamsSpecies.Equals(
-            feature.Species,
-            StringComparison.OrdinalIgnoreCase))
-    {
-        if (matchedSpecies is null)
-        {
-            actions.Add(
-                new SpatialSyncAction(
-                    Action: "Failed",
-                    AssetTag: feature.AssetTag,
-                    Reason:
-                        $"ArcGIS species '{feature.Species}' could not be matched in UFAMS.",
-                    UfamsSpecies: originalUfamsSpecies,
-                    ArcGisSpecies: feature.Species,
-                    UfamsPark: originalUfamsPark,
-                    ArcGisPark: feature.Park,
-                    UfamsHealthStatus: originalUfamsHealthStatus,
-                    ArcGisHealthStatus: feature.HealthStatus,
-                    UfamsLatitude: originalUfamsLatitude,
-                    ArcGisLatitude: feature.Latitude,
-                    UfamsLongitude: originalUfamsLongitude,
-                    ArcGisLongitude: feature.Longitude));
-
-            return new SpatialSyncResult(
-                Created: 0,
-                Updated: 0,
-                Deleted: 0,
-                Unchanged: 0,
-                Actions: actions);
-        }
-
-
-        existingTree.ChangeSpecies(
-            matchedSpecies);
-
-        reasons.Add(
-            "Species updated");
-    }
-
-
-    /*
-     * Park
-     */
-
-    var matchedPark =
-        parks.FirstOrDefault(
-            p =>
-                p.Name.Equals(
-                    feature.Park,
-                    StringComparison.OrdinalIgnoreCase));
-
-
-    if (
-        !originalUfamsPark.Equals(
-            feature.Park,
-            StringComparison.OrdinalIgnoreCase))
-    {
-        if (matchedPark is null)
-        {
-            actions.Add(
-                new SpatialSyncAction(
-                    Action: "Failed",
-                    AssetTag: feature.AssetTag,
-                    Reason:
-                        $"ArcGIS park '{feature.Park}' could not be matched in UFAMS.",
-                    UfamsSpecies: originalUfamsSpecies,
-                    ArcGisSpecies: feature.Species,
-                    UfamsPark: originalUfamsPark,
-                    ArcGisPark: feature.Park,
-                    UfamsHealthStatus: originalUfamsHealthStatus,
-                    ArcGisHealthStatus: feature.HealthStatus,
-                    UfamsLatitude: originalUfamsLatitude,
-                    ArcGisLatitude: feature.Latitude,
-                    UfamsLongitude: originalUfamsLongitude,
-                    ArcGisLongitude: feature.Longitude));
-
-            return new SpatialSyncResult(
-                Created: 0,
-                Updated: 0,
-                Deleted: 0,
-                Unchanged: 0,
-                Actions: actions);
-        }
-
-
-        existingTree.ChangePark(
-            matchedPark);
-
-        reasons.Add(
-            "Park updated");
-    }
-
-
-    /*
-     * Health status
-     */
-
-    if (
-        !originalUfamsHealthStatus.Equals(
-            feature.HealthStatus,
-            StringComparison.OrdinalIgnoreCase))
-    {
-        if (
-            !Enum.TryParse<TreeHealthStatus>(
-                feature.HealthStatus,
-                true,
-                out var healthStatus))
-        {
-            actions.Add(
-                new SpatialSyncAction(
-                    Action: "Failed",
-                    AssetTag: feature.AssetTag,
-                    Reason:
-                        $"Invalid ArcGIS health status: {feature.HealthStatus}",
-                    UfamsSpecies: originalUfamsSpecies,
-                    ArcGisSpecies: feature.Species,
-                    UfamsPark: originalUfamsPark,
-                    ArcGisPark: feature.Park,
-                    UfamsHealthStatus: originalUfamsHealthStatus,
-                    ArcGisHealthStatus: feature.HealthStatus,
-                    UfamsLatitude: originalUfamsLatitude,
-                    ArcGisLatitude: feature.Latitude,
-                    UfamsLongitude: originalUfamsLongitude,
-                    ArcGisLongitude: feature.Longitude));
-
-            return new SpatialSyncResult(
-                Created: 0,
-                Updated: 0,
-                Deleted: 0,
-                Unchanged: 0,
-                Actions: actions);
-        }
-
-
-        existingTree.UpdateHealth(
-            healthStatus);
-
-        reasons.Add(
-            "Health status updated");
-    }
-
-
-    /*
-     * Location
-     */
-
-    if (
-        LocationChanged(
-            existingTree,
-            feature))
-    {
-        existingTree.Relocate(
-            matchedPark ?? existingTree.Park,
-            new GeoCoordinate(
-                feature.Latitude,
-                feature.Longitude));
-
-        reasons.Add(
-            "Location updated");
-    }
-
-
-    /*
-     * No actual ArcGIS changes.
-     */
-
-    if (reasons.Count == 0)
-    {
-        if (arcGisFeatureIdAssigned)
-        {
             await _unitOfWork.SaveChangesAsync(
                 cancellationToken);
+
+            await _unitOfWork.CommitTransactionAsync(
+                cancellationToken);
+
+            return new SpatialSyncResult(
+                Created: 0,
+                Updated: 0,
+                Deleted: 0,
+                Unchanged: 0,
+                Actions: actions);
         }
 
 
+        /*
+         * Retrieve ArcGIS feature.
+         */
+
+        var features =
+            await _provider.GetFeaturesAsync(
+                cancellationToken);
+
+        var feature =
+            features.FirstOrDefault(
+                f =>
+                    f.AssetTag.Equals(
+                        assetTag,
+                        StringComparison.OrdinalIgnoreCase));
+
+
+        if (feature is null)
+        {
+            var reason =
+                "Tree was not found in ArcGIS.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: assetTag,
+                    Reason: reason,
+                    UfamsSpecies: null,
+                    ArcGisSpecies: null,
+                    UfamsPark: null,
+                    ArcGisPark: null,
+                    UfamsHealthStatus: null,
+                    ArcGisHealthStatus: null,
+                    UfamsLatitude: null,
+                    ArcGisLatitude: null,
+                    UfamsLongitude: null,
+                    ArcGisLongitude: null));
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    assetTag,
+                    "Failed",
+                    reason));
+
+            audit.Complete(
+                0,
+                0,
+                1,
+                0);
+
+            await _unitOfWork.SaveChangesAsync(
+                cancellationToken);
+
+            await _unitOfWork.CommitTransactionAsync(
+                cancellationToken);
+
+            return new SpatialSyncResult(
+                Created: 0,
+                Updated: 0,
+                Deleted: 0,
+                Unchanged: 0,
+                Actions: actions);
+        }
+
+
+        /*
+         * Load UFAMS data.
+         */
+
+        var trees =
+            await _treeRepository.GetAllAsync(
+                cancellationToken);
+
+        var species =
+            await _speciesRepository.GetAllAsync(
+                cancellationToken);
+
+        var parks =
+            await _parkRepository.GetAllAsync(
+                cancellationToken);
+
+
+        /*
+         * Locate the existing UFAMS tree.
+         */
+
+        var existingTree =
+            trees.FirstOrDefault(
+                tree =>
+                    tree.ArcGisFeatureId == feature.Id
+                    ||
+                    tree.AssetTag.Equals(
+                        feature.AssetTag,
+                        StringComparison.OrdinalIgnoreCase));
+
+
+        if (existingTree is null)
+        {
+            var reason =
+                "Tree does not exist in UFAMS.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: feature.AssetTag,
+                    Reason: reason,
+                    UfamsSpecies: null,
+                    ArcGisSpecies: feature.Species,
+                    UfamsPark: null,
+                    ArcGisPark: feature.Park,
+                    UfamsHealthStatus: null,
+                    ArcGisHealthStatus: feature.HealthStatus,
+                    UfamsLatitude: null,
+                    ArcGisLatitude: feature.Latitude,
+                    UfamsLongitude: null,
+                    ArcGisLongitude: feature.Longitude));
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Failed",
+                    reason));
+
+            audit.Complete(
+                0,
+                0,
+                1,
+                0);
+
+            await _unitOfWork.SaveChangesAsync(
+                cancellationToken);
+
+            await _unitOfWork.CommitTransactionAsync(
+                cancellationToken);
+
+            return new SpatialSyncResult(
+                Created: 0,
+                Updated: 0,
+                Deleted: 0,
+                Unchanged: 0,
+                Actions: actions);
+        }
+
+
+        /*
+         * Capture original UFAMS values
+         * before making any changes.
+         */
+
+        var originalUfamsSpecies =
+            existingTree.Species.CommonName;
+
+        var originalUfamsPark =
+            existingTree.Park.Name;
+
+        var originalUfamsHealthStatus =
+            existingTree.HealthStatus.ToString();
+
+        var originalUfamsLatitude =
+            existingTree.Location.Latitude;
+
+        var originalUfamsLongitude =
+            existingTree.Location.Longitude;
+
+
+        /*
+         * Resolve species and park.
+         */
+
+        var matchedSpecies =
+            species.FirstOrDefault(
+                s =>
+                    s.CommonName.Equals(
+                        feature.Species,
+                        StringComparison.OrdinalIgnoreCase));
+
+        var matchedPark =
+            parks.FirstOrDefault(
+                p =>
+                    p.Name.Equals(
+                        feature.Park,
+                        StringComparison.OrdinalIgnoreCase));
+
+
+        /*
+         * Validate species BEFORE modifying the Tree.
+         */
+
+        if (
+            !originalUfamsSpecies.Equals(
+                feature.Species,
+                StringComparison.OrdinalIgnoreCase)
+            &&
+            matchedSpecies is null)
+        {
+            var reason =
+                $"ArcGIS species '{feature.Species}' could not be matched in UFAMS.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: feature.AssetTag,
+                    Reason: reason,
+                    UfamsSpecies: originalUfamsSpecies,
+                    ArcGisSpecies: feature.Species,
+                    UfamsPark: originalUfamsPark,
+                    ArcGisPark: feature.Park,
+                    UfamsHealthStatus: originalUfamsHealthStatus,
+                    ArcGisHealthStatus: feature.HealthStatus,
+                    UfamsLatitude: originalUfamsLatitude,
+                    ArcGisLatitude: feature.Latitude,
+                    UfamsLongitude: originalUfamsLongitude,
+                    ArcGisLongitude: feature.Longitude));
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Failed",
+                    reason));
+
+            audit.Complete(
+                0,
+                0,
+                1,
+                0);
+
+            await _unitOfWork.SaveChangesAsync(
+                cancellationToken);
+
+            await _unitOfWork.CommitTransactionAsync(
+                cancellationToken);
+
+            return new SpatialSyncResult(
+                Created: 0,
+                Updated: 0,
+                Deleted: 0,
+                Unchanged: 0,
+                Actions: actions);
+        }
+
+
+        /*
+         * Validate park BEFORE modifying the Tree.
+         */
+
+        if (
+            !originalUfamsPark.Equals(
+                feature.Park,
+                StringComparison.OrdinalIgnoreCase)
+            &&
+            matchedPark is null)
+        {
+            var reason =
+                $"ArcGIS park '{feature.Park}' could not be matched in UFAMS.";
+
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Failed",
+                    AssetTag: feature.AssetTag,
+                    Reason: reason,
+                    UfamsSpecies: originalUfamsSpecies,
+                    ArcGisSpecies: feature.Species,
+                    UfamsPark: originalUfamsPark,
+                    ArcGisPark: feature.Park,
+                    UfamsHealthStatus: originalUfamsHealthStatus,
+                    ArcGisHealthStatus: feature.HealthStatus,
+                    UfamsLatitude: originalUfamsLatitude,
+                    ArcGisLatitude: feature.Latitude,
+                    UfamsLongitude: originalUfamsLongitude,
+                    ArcGisLongitude: feature.Longitude));
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Failed",
+                    reason));
+
+            audit.Complete(
+                0,
+                0,
+                1,
+                0);
+
+            await _unitOfWork.SaveChangesAsync(
+                cancellationToken);
+
+            await _unitOfWork.CommitTransactionAsync(
+                cancellationToken);
+
+            return new SpatialSyncResult(
+                Created: 0,
+                Updated: 0,
+                Deleted: 0,
+                Unchanged: 0,
+                Actions: actions);
+        }
+
+
+        /*
+         * Validate health status BEFORE modifying the Tree.
+         */
+
+        TreeHealthStatus healthStatus =
+            existingTree.HealthStatus;
+
+        if (
+            !originalUfamsHealthStatus.Equals(
+                feature.HealthStatus,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            if (
+                !Enum.TryParse<TreeHealthStatus>(
+                    feature.HealthStatus,
+                    true,
+                    out healthStatus))
+            {
+                var reason =
+                    $"Invalid ArcGIS health status: {feature.HealthStatus}";
+
+                actions.Add(
+                    new SpatialSyncAction(
+                        Action: "Failed",
+                        AssetTag: feature.AssetTag,
+                        Reason: reason,
+                        UfamsSpecies: originalUfamsSpecies,
+                        ArcGisSpecies: feature.Species,
+                        UfamsPark: originalUfamsPark,
+                        ArcGisPark: feature.Park,
+                        UfamsHealthStatus: originalUfamsHealthStatus,
+                        ArcGisHealthStatus: feature.HealthStatus,
+                        UfamsLatitude: originalUfamsLatitude,
+                        ArcGisLatitude: feature.Latitude,
+                        UfamsLongitude: originalUfamsLongitude,
+                        ArcGisLongitude: feature.Longitude));
+
+                audit.AddEntry(
+                    new SyncAuditEntry(
+                        feature.AssetTag,
+                        "Failed",
+                        reason));
+
+                audit.Complete(
+                    0,
+                    0,
+                    1,
+                    0);
+
+                await _unitOfWork.SaveChangesAsync(
+                    cancellationToken);
+
+                await _unitOfWork.CommitTransactionAsync(
+                    cancellationToken);
+
+                return new SpatialSyncResult(
+                    Created: 0,
+                    Updated: 0,
+                    Deleted: 0,
+                    Unchanged: 0,
+                    Actions: actions);
+            }
+        }
+
+
+        /*
+         * Determine what will change.
+         */
+
+        var reasons =
+            new List<string>();
+
+        if (
+            !originalUfamsSpecies.Equals(
+                feature.Species,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            reasons.Add(
+                "Species updated");
+        }
+
+        if (
+            !originalUfamsPark.Equals(
+                feature.Park,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            reasons.Add(
+                "Park updated");
+        }
+
+        if (
+            !originalUfamsHealthStatus.Equals(
+                feature.HealthStatus,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            reasons.Add(
+                "Health status updated");
+        }
+
+        var locationChanged =
+            LocationChanged(
+                existingTree,
+                feature);
+
+        if (locationChanged)
+        {
+            reasons.Add(
+                "Location updated");
+        }
+
+
+        /*
+         * Assign ArcGIS Feature ID if necessary.
+         */
+
+        var arcGisFeatureIdAssigned =
+            false;
+
+        if (
+            string.IsNullOrWhiteSpace(
+                existingTree.ArcGisFeatureId))
+        {
+            existingTree.AssignArcGisFeatureId(
+                feature.Id);
+
+            arcGisFeatureIdAssigned = true;
+        }
+
+
+        /*
+         * No actual changes.
+         */
+
+        if (reasons.Count == 0)
+        {
+            actions.Add(
+                new SpatialSyncAction(
+                    Action: "Unchanged",
+                    AssetTag: feature.AssetTag,
+                    Reason: "No differences detected.",
+                    UfamsSpecies: originalUfamsSpecies,
+                    ArcGisSpecies: feature.Species,
+                    UfamsPark: originalUfamsPark,
+                    ArcGisPark: feature.Park,
+                    UfamsHealthStatus: originalUfamsHealthStatus,
+                    ArcGisHealthStatus: feature.HealthStatus,
+                    UfamsLatitude: originalUfamsLatitude,
+                    ArcGisLatitude: feature.Latitude,
+                    UfamsLongitude: originalUfamsLongitude,
+                    ArcGisLongitude: feature.Longitude));
+
+            audit.AddEntry(
+                new SyncAuditEntry(
+                    feature.AssetTag,
+                    "Unchanged",
+                    "No differences detected."));
+
+            audit.Complete(
+                0,
+                0,
+                0,
+                1);
+
+            await _unitOfWork.SaveChangesAsync(
+                cancellationToken);
+
+            await _unitOfWork.CommitTransactionAsync(
+                cancellationToken);
+
+            return new SpatialSyncResult(
+                Created: 0,
+                Updated: 0,
+                Deleted: 0,
+                Unchanged: 1,
+                Actions: actions);
+        }
+
+
+        /*
+         * Apply validated changes.
+         */
+
+        if (
+            !originalUfamsSpecies.Equals(
+                feature.Species,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            existingTree.ChangeSpecies(
+                matchedSpecies!);
+        }
+
+        if (
+            !originalUfamsPark.Equals(
+                feature.Park,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            existingTree.ChangePark(
+                matchedPark!);
+        }
+
+        if (
+            !originalUfamsHealthStatus.Equals(
+                feature.HealthStatus,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            existingTree.UpdateHealth(
+                healthStatus);
+        }
+
+        if (locationChanged)
+        {
+            existingTree.Relocate(
+                matchedPark ?? existingTree.Park,
+                new GeoCoordinate(
+                    feature.Latitude,
+                    feature.Longitude));
+        }
+
+
+        /*
+         * Record successful update.
+         */
+
+        var updateReason =
+            string.Join(
+                ", ",
+                reasons);
+
         actions.Add(
             new SpatialSyncAction(
-                Action: "Unchanged",
+                Action: "Update",
                 AssetTag: feature.AssetTag,
-                Reason: "No differences detected.",
+                Reason: updateReason,
                 UfamsSpecies: originalUfamsSpecies,
                 ArcGisSpecies: feature.Species,
                 UfamsPark: originalUfamsPark,
@@ -830,73 +1589,46 @@ public async Task<SpatialSyncResult> ApplySingleAsync(
                 UfamsLongitude: originalUfamsLongitude,
                 ArcGisLongitude: feature.Longitude));
 
+        audit.AddEntry(
+            new SyncAuditEntry(
+                feature.AssetTag,
+                "Update",
+                updateReason));
+
+        audit.Complete(
+            0,
+            1,
+            0,
+            0);
+
+
+        /*
+         * Save Tree + Audit together.
+         */
+
+        await _unitOfWork.SaveChangesAsync(
+            cancellationToken);
+
+        await _unitOfWork.CommitTransactionAsync(
+            cancellationToken);
+
+
         return new SpatialSyncResult(
             Created: 0,
-            Updated: 0,
+            Updated: 1,
             Deleted: 0,
-            Unchanged: 1,
+            Unchanged: 0,
             Actions: actions);
     }
+    catch
+    {
+        await _unitOfWork.RollbackTransactionAsync(
+            cancellationToken);
 
-
-    /*
-     * Save the selected tree only.
-     */
-
-    await _unitOfWork.SaveChangesAsync(
-        cancellationToken);
-
-
-    /*
-     * Return the BEFORE vs AFTER comparison.
-     */
-
-    actions.Add(
-        new SpatialSyncAction(
-            Action: "Update",
-            AssetTag: feature.AssetTag,
-            Reason: string.Join(
-                ", ",
-                reasons),
-
-            UfamsSpecies:
-                originalUfamsSpecies,
-
-            ArcGisSpecies:
-                feature.Species,
-
-            UfamsPark:
-                originalUfamsPark,
-
-            ArcGisPark:
-                feature.Park,
-
-            UfamsHealthStatus:
-                originalUfamsHealthStatus,
-
-            ArcGisHealthStatus:
-                feature.HealthStatus,
-
-            UfamsLatitude:
-                originalUfamsLatitude,
-
-            ArcGisLatitude:
-                feature.Latitude,
-
-            UfamsLongitude:
-                originalUfamsLongitude,
-
-            ArcGisLongitude:
-                feature.Longitude));
-
-
-    return new SpatialSyncResult(
-        Created: 0,
-        Updated: 1,
-        Deleted: 0,
-        Unchanged: 0,
-        Actions: actions);
+        throw;
+    }
 }
+
 
 
 

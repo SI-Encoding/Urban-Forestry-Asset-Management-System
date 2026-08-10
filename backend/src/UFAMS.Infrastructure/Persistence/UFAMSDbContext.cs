@@ -11,6 +11,10 @@ public class UFAMSDbContext : DbContext
     {
     }
 
+    public DbSet<SyncAudit> SyncAudits => Set<SyncAudit>();
+
+    public DbSet<SyncAuditEntry> SyncAuditEntries => Set<SyncAuditEntry>();
+    
     public DbSet<Tree> Trees => Set<Tree>();
 
     public DbSet<Species> Species => Set<Species>();
@@ -48,5 +52,55 @@ public class UFAMSDbContext : DbContext
                 .HasForeignKey(i => i.TreeId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<SyncAudit>(entity =>
+    {
+        entity.HasKey(
+            audit => audit.Id);
+
+        entity.Property(
+            audit => audit.Status)
+            .HasConversion<string>()
+            .IsRequired();
+
+        entity.Property(
+            audit => audit.StartedAt)
+            .IsRequired();
+
+        entity.HasMany(
+            audit => audit.Entries)
+            .WithOne(
+                entry => entry.SyncAudit)
+            .HasForeignKey(
+                entry => entry.SyncAuditId)
+            .OnDelete(
+                DeleteBehavior.Cascade);
+    });
+
+
+    modelBuilder.Entity<SyncAuditEntry>(entity =>
+    {
+        entity.HasKey(
+            entry => entry.Id);
+
+        entity.Property(
+            entry => entry.AssetTag)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        entity.Property(
+            entry => entry.Action)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        entity.Property(
+            entry => entry.Reason)
+            .IsRequired()
+            .HasMaxLength(500);
+
+        entity.Property(
+            entry => entry.CreatedAt)
+            .IsRequired();
+    });
     }
 }

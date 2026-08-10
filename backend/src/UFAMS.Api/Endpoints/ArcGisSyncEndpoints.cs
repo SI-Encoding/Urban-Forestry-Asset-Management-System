@@ -1,4 +1,5 @@
 using UFAMS.Application.Features.ArcGisSync;
+using UFAMS.Application.Interfaces;
 
 namespace UFAMS.Api.Endpoints;
 
@@ -62,6 +63,50 @@ public static class ArcGisSyncEndpoints
                 return Results.Ok(result);
             });
         
+        app.MapGet(
+            "/arcgis/sync/audits",
+            async (
+                ISyncAuditRepository auditRepository,
+                CancellationToken cancellationToken) =>
+            {
+                var audits =
+                    await auditRepository.GetRecentAsync(
+                        50,
+                        cancellationToken);
+
+                var result =
+                    audits.Select(
+                        audit => new
+                        {
+                            audit.Id,
+                            audit.StartedAt,
+                            audit.CompletedAt,
+                            Status =
+                                audit.Status.ToString(),
+                            audit.CreatedCount,
+                            audit.UpdatedCount,
+                            audit.FailedCount,
+                            audit.IgnoredCount,
+
+                            Entries =
+                                audit.Entries.Select(
+                                    entry => new
+                                    {
+                                        entry.Id,
+                                        entry.AssetTag,
+                                        entry.Action,
+                                        entry.Reason,
+                                        entry.CreatedAt
+                                    })
+                        });
+
+                return Results.Ok(result);
+            })
+        .WithName("GetSyncAudits")
+        .WithSummary("Get recent ArcGIS synchronization audits")
+        .WithDescription(
+            "Returns recent ArcGIS synchronization audit history.");
+            
         return app;
     }
 }

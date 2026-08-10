@@ -6,6 +6,7 @@ using UFAMS.Application.Interfaces;
 using UFAMS.Infrastructure.Repositories;
 using UFAMS.Application.Features.ArcGisSync;
 using UFAMS.Infrastructure.ArcGIS;
+using UFAMS.Infrastructure.Persistence.Repositories;
 
 namespace UFAMS.Infrastructure;
 
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddSingleton<ArcGisTokenStore>();
         services.AddSingleton<OAuthStateStore>();
         services.AddSingleton<ArcGisTokenPersistence>();
+        services.AddScoped<ISyncAuditRepository,SyncAuditRepository>();
         return services;
     }
 }

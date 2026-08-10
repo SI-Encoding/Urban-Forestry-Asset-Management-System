@@ -11,7 +11,9 @@ import {
     ClipboardCheck,
     Wrench,
     RefreshCw,
+    History,
 } from "lucide-react";
+
 
 const links = [
     {
@@ -54,53 +56,124 @@ const links = [
         label: "ArcGIS Sync",
         icon: RefreshCw,
     },
+    {
+        href: "/sync-history",
+        label: "Sync History",
+        icon: History,
+    },
 ];
 
+
 export function Sidebar() {
-    const pathname = usePathname();
+
+    const pathname =
+        usePathname();
+
 
     return (
-        <aside className="flex w-64 flex-col border-r bg-white shadow-sm">
 
-            <div className="border-b p-6">
+        <aside
+            className="
+                flex
+                w-64
+                flex-col
+                border-r
+                bg-white
+                shadow-sm
+            "
+        >
 
-                <h1 className="text-2xl font-bold text-green-700">
+            <div
+                className="
+                    border-b
+                    p-6
+                "
+            >
+
+                <h1
+                    className="
+                        text-2xl
+                        font-bold
+                        text-green-700
+                    "
+                >
                     UFAMS
                 </h1>
 
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p
+                    className="
+                        mt-1
+                        text-sm
+                        text-muted-foreground
+                    "
+                >
                     Urban Forest Asset Management
                 </p>
 
             </div>
 
-            <nav className="flex flex-col p-3">
 
-                {links.map((link) => {
-                    const Icon = link.icon;
+            <nav
+                className="
+                    flex
+                    flex-col
+                    p-3
+                "
+            >
 
-                    return (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 transition
+                {links.map(
+                    (link) => {
 
-                            ${
-                                pathname === link.href
-                                    ? "bg-green-600 text-white"
-                                    : "hover:bg-gray-100"
-                            }
-                            `}
-                        >
-                            <Icon size={18} />
+                        const Icon =
+                            link.icon;
 
-                            {link.label}
-                        </Link>
-                    );
-                })}
+
+                        return (
+
+                            <Link
+                                key={
+                                    link.href
+                                }
+                                href={
+                                    link.href
+                                }
+                                className={`
+                                    flex
+                                    items-center
+                                    gap-3
+                                    rounded-lg
+                                    px-4
+                                    py-3
+                                    transition
+
+                                    ${
+                                        pathname ===
+                                        link.href
+                                            ? "bg-green-600 text-white"
+                                            : "hover:bg-gray-100"
+                                    }
+                                `}
+                            >
+
+                                <Icon
+                                    size={18}
+                                />
+
+                                {
+                                    link.label
+                                }
+
+                            </Link>
+
+                        );
+
+                    }
+                )}
 
             </nav>
 
         </aside>
+
     );
+
 }
