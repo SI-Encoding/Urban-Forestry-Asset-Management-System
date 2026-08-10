@@ -44,6 +44,9 @@ export function TreeMapContainer({
     const [search, setSearch] =
         useState("");
 
+    const [showHeatMap, setShowHeatMap] =
+        useState(false);
+
     const [selectedHealth, setSelectedHealth] =
         useState<TreeHealthStatus[]>([
             "Excellent",
@@ -155,6 +158,8 @@ export function TreeMapContainer({
                 onChange={toggleHealth}
                 search={search}
                 onSearchChange={setSearch}
+                showHeatMap={showHeatMap}
+                onHeatMapChange={setShowHeatMap}
             />
 
             <div className="flex min-h-0 flex-1">
@@ -165,6 +170,7 @@ export function TreeMapContainer({
                         trees={filteredTrees}
                         selectedTree={selectedTree}
                         onSelectTree={handleTreeSelected}
+                        showHeatMap={showHeatMap}
                     />
 
                 </div>

@@ -1,13 +1,18 @@
 "use client";
 
 import type { TreeHealthStatus } from "@/types/tree";
+
 import { ExportGeoJsonButton } from "./ExportGeoJsonButton";
+
 interface MapToolbarProps {
     selected: TreeHealthStatus[];
     onChange: (health: TreeHealthStatus) => void;
 
     search: string;
     onSearchChange: (value: string) => void;
+
+    showHeatMap: boolean;
+    onHeatMapChange: (value: boolean) => void;
 }
 
 const statuses: TreeHealthStatus[] = [
@@ -39,6 +44,8 @@ export function MapToolbar({
     onChange,
     search,
     onSearchChange,
+    showHeatMap,
+    onHeatMapChange,
 }: MapToolbarProps) {
 
     return (
@@ -54,9 +61,11 @@ export function MapToolbar({
             />
 
             <div className="flex items-center gap-2">
+
                 <span className="text-sm font-medium text-muted-foreground">
                     Health:
                 </span>
+
                 {statuses.map((status) => {
 
                     const active =
@@ -65,6 +74,7 @@ export function MapToolbar({
                     return (
                         <button
                             key={status}
+                            type="button"
                             onClick={() => onChange(status)}
                             className={`
                                 flex items-center gap-2
@@ -72,8 +82,8 @@ export function MapToolbar({
                                 transition
                                 ${
                                     active
-                                    ? colors[status]
-                                    : "bg-gray-100 text-gray-400"
+                                        ? colors[status]
+                                        : "bg-gray-100 text-gray-400"
                                 }
                             `}
                         >
@@ -86,7 +96,34 @@ export function MapToolbar({
                     );
 
                 })}
-            <ExportGeoJsonButton />
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        onHeatMapChange(!showHeatMap)
+                    }
+                    className={`
+                        rounded-md
+                        border
+                        px-3
+                        py-1.5
+                        text-sm
+                        font-medium
+                        transition
+                        ${
+                            showHeatMap
+                                ? "bg-green-600 text-white border-green-600"
+                                : "bg-white text-gray-700 hover:bg-gray-100"
+                        }
+                    `}
+                >
+                    {showHeatMap
+                        ? "Hide Heat Map"
+                        : "Show Heat Map"}
+                </button>
+
+                <ExportGeoJsonButton />
+
             </div>
 
         </div>

@@ -8,6 +8,7 @@ interface TreeMapProps {
     trees: Tree[];
     selectedTree?: Tree;
     onSelectTree: (tree: Tree) => void;
+    showHeatMap: boolean;
 }
 
 const ClientTreeMap = dynamic(
@@ -28,13 +29,15 @@ const ClientTreeMap = dynamic(
 export function TreeMap({
     trees,
     selectedTree,
-    onSelectTree
+    onSelectTree,
+    showHeatMap,
 }: TreeMapProps) {
     return (
         <ClientTreeMap
             trees={trees}
             selectedTree={selectedTree}
             onSelectTree={onSelectTree}
+            showHeatMap={showHeatMap}
         />
     );
 }
