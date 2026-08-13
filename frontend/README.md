@@ -1,36 +1,259 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UFAMS Frontend
+
+The UFAMS frontend is a Next.js application that provides the user interface for the Urban Forestry Asset Management System.
+
+It communicates with the UFAMS ASP.NET Core API and provides interfaces for managing trees, parks, species, inspections, work orders, and ArcGIS synchronization workflows.
+
+## Technology Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Leaflet
+- Fetch API
+
+## Frontend Structure
+
+The frontend uses the Next.js App Router.
+
+```text
+frontend/
+├── app/
+│   ├── dashboard/
+│   ├── map/
+│   ├── trees/
+│   ├── parks/
+│   ├── species/
+│   ├── inspections/
+│   ├── work-orders/
+│   └── ...
+│
+├── components/
+│   └── ...
+│
+├── lib/
+│   └── ...
+│
+├── public/
+│   └── ...
+│
+├── package.json
+└── ...
+```
+
+The exact directory structure may evolve as the frontend develops.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+Make sure the following are installed:
+
+- Node.js
+- npm
+- UFAMS backend API
+
+### Install Dependencies
+
+From the frontend directory:
+
+```bash
+npm install
+```
+
+### Configure the API URL
+
+The frontend communicates with the UFAMS ASP.NET Core API through the `NEXT_PUBLIC_API_URL` environment variable.
+
+For local development, create a `.env.local` file if required:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5079
+```
+
+The exact backend port is determined by the ASP.NET Core launch configuration.
+
+Do not commit environment-specific secrets or credentials.
+
+## Run the Development Server
+
+Start the Next.js development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The frontend is normally available at:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build the Frontend
 
-## Learn More
+Create a production build:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+A successful build confirms that the frontend can be compiled successfully.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Frontend and Backend
 
-## Deploy on Vercel
+The frontend communicates with the ASP.NET Core API.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The general request flow is:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+User Interface
+      │
+      ▼
+Next.js Page / Component
+      │
+      ▼
+Frontend API Client
+      │
+      ▼
+ASP.NET Core API
+      │
+      ▼
+Application Layer
+      │
+      ▼
+SQL Server / ArcGIS
+```
+
+The frontend should not contain backend business rules.
+
+Business rules belong primarily in the backend Application and Domain layers.
+
+## API Communication
+
+Frontend API requests use the UFAMS API client utilities.
+
+The API base URL should be provided through:
+
+```text
+NEXT_PUBLIC_API_URL
+```
+
+Avoid hard-coding production API URLs into components.
+
+## GIS / Mapping
+
+UFAMS includes geographic functionality for tree assets.
+
+The frontend uses mapping functionality to display tree locations and support GIS-oriented workflows.
+
+Tree geographic data is provided by the backend API.
+
+The frontend should treat the backend as the source of truth for UFAMS asset data.
+
+## ArcGIS Integration
+
+The frontend also supports ArcGIS synchronization workflows.
+
+These workflows communicate with backend ArcGIS endpoints rather than directly implementing ArcGIS synchronization logic in the browser.
+
+The general flow is:
+
+```text
+Frontend
+   │
+   ▼
+UFAMS API
+   │
+   ▼
+ArcGIS Integration Layer
+   │
+   ├── ArcGIS Feature Service
+   │
+   └── UFAMS Database
+```
+
+This keeps authentication, synchronization, persistence, and business rules on the backend.
+
+## Main Application Areas
+
+The frontend contains interfaces for areas including:
+
+### Dashboard
+
+Provides an overview of UFAMS information and operational activity.
+
+### Map
+
+Displays tree assets geographically.
+
+### Trees
+
+Provides tree asset management and geographic information.
+
+### Parks
+
+Provides park information and inventory information.
+
+### Species
+
+Provides tree species information.
+
+### Inspections
+
+Provides inspection records and inspection-related workflows.
+
+### Work Orders
+
+Provides work order management, assignment, and status workflows.
+
+### ArcGIS Synchronization
+
+Provides access to ArcGIS authentication and synchronization workflows.
+
+## Development Guidelines
+
+When modifying the frontend:
+
+- Reuse existing components.
+- Reuse existing API utilities.
+- Follow the existing Next.js App Router structure.
+- Keep API communication separate from UI presentation.
+- Avoid duplicating backend business rules.
+- Avoid unnecessary dependencies.
+- Preserve existing navigation and application behavior.
+- Keep environment-specific configuration outside the source code.
+
+## Testing
+
+UFAMS uses Playwright for end-to-end testing and Vitest for unit testing.
+
+When changing frontend functionality, run the relevant tests when available.
+
+## Production Build
+
+Before deploying the frontend, verify that the production build succeeds:
+
+```bash
+npm run build
+```
+
+Production environment configuration should provide the appropriate API URL through:
+
+```text
+NEXT_PUBLIC_API_URL
+```
+
+Do not commit production credentials or secrets.
+
+## Related Documentation
+
+Project-wide documentation is located in the repository's `docs/` directory.
+
+See:
+
+- [`../README.md`](../README.md) — UFAMS project overview
+- [`../docs/API.md`](../docs/API.md) — Backend API documentation
+- [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — System architecture
+- [`../docs/DATABASE.md`](../docs/DATABASE.md) — Database architecture
+- [`../docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md) — Development setup
