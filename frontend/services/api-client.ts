@@ -1,5 +1,6 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5079";
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://localhost:5079";
 
 export async function apiFetch<T>(
     url: string,
@@ -9,22 +10,25 @@ export async function apiFetch<T>(
     const response = await fetch(
         `${API_URL}${url}`,
         {
-            cache: "no-store",
+            ...options,
             headers: {
                 "Content-Type": "application/json",
+                ...(options?.headers ?? {}),
             },
-            ...options,
         }
     );
 
     if (!response.ok) {
+
         throw new Error(
             `API request failed: ${response.status}`
         );
+
     }
 
     return response.json();
 }
+
 
 export async function apiPost<T>(
     url: string,
@@ -52,8 +56,8 @@ export async function apiPost<T>(
     }
 
     return response.json();
-
 }
+
 
 export async function apiPut<T>(
     url: string,
@@ -83,8 +87,8 @@ export async function apiPut<T>(
     }
 
     return response.json();
-
 }
+
 
 export async function apiPatch<T>(
     url: string,
@@ -96,19 +100,24 @@ export async function apiPatch<T>(
         {
             method: "PATCH",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                    "application/json",
             },
             body: JSON.stringify(body),
-        });
+        }
+    );
 
     if (!response.ok) {
+
         throw new Error(
             `API request failed: ${response.status}`
         );
+
     }
 
     return response.json();
 }
+
 
 export async function apiDelete(
     url: string
@@ -118,11 +127,14 @@ export async function apiDelete(
         `${API_URL}${url}`,
         {
             method: "DELETE",
-        });
+        }
+    );
 
     if (!response.ok) {
+
         throw new Error(
             `API request failed: ${response.status}`
         );
+
     }
 }

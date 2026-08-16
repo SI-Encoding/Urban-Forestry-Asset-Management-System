@@ -1,8 +1,22 @@
+"use client";
+
+import {
+    useEffect,
+    useState,
+} from "react";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+
+import {
+    useSearchParams,
+} from "next/navigation";
 
 import {
     getSyncAudits,
+} from "@/services/sync-audit";
+
+import type {
+    SyncAudit,
 } from "@/services/sync-audit";
 
 import {
@@ -26,52 +40,240 @@ import {
 } from "@/components/ui/table";
 
 
-interface SyncHistoryDetailsPageProps {
+export default function SyncHistoryDetailsClient() {
 
-    params: Promise<{
-        id: string;
-    }>;
-
-}
+    const searchParams =
+        useSearchParams();
 
 
-export default async function SyncHistoryDetailsPage({
-    params,
-}: SyncHistoryDetailsPageProps) {
-
-    const {
-        id,
-    } = await params;
+    const id =
+        searchParams.get("id");
 
 
     const auditId =
-        Number(id);
+        id
+            ? Number(id)
+            : null;
 
 
-    if (
-        !Number.isInteger(auditId)
-        ||
-        auditId <= 0
-    ) {
-        notFound();
-    }
+    const isValidAuditId =
+        auditId !== null &&
+        Number.isInteger(auditId) &&
+        auditId > 0;
 
 
-    const audits =
-        await getSyncAudits();
+    const [audit, setAudit] =
+        useState<SyncAudit | null>(null);
 
 
-    const audit =
-        audits.find(
-            item =>
-                item.id === auditId
+    const [loading, setLoading] =
+        useState(isValidAuditId);
+
+
+    useEffect(() => {
+
+        if (
+            !isValidAuditId ||
+            auditId === null
+        ) {
+            return;
+        }
+
+
+        let cancelled = false;
+
+
+        getSyncAudits()
+
+            .then(audits => {
+
+                if (cancelled) {
+                    return;
+                }
+
+
+                const found =
+                    audits.find(
+                        item =>
+                            item.id === auditId
+                    );
+
+
+                setAudit(
+                    found ?? null
+                );
+
+            })
+
+            .catch(() => {
+
+                if (!cancelled) {
+                    setAudit(null);
+                }
+
+            })
+
+            .finally(() => {
+
+                if (!cancelled) {
+                    setLoading(false);
+                }
+
+            });
+
+
+        return () => {
+
+            cancelled = true;
+
+        };
+
+
+    }, [
+        auditId,
+        isValidAuditId,
+    ]);
+
+
+    /*
+     * No ID was supplied.
+     */
+
+    if (!id) {
+
+        return (
+
+            <AppLayout>
+
+                <div className="p-6">
+
+                    <h1 className="text-2xl font-bold">
+
+                        Synchronization Details
+
+                    </h1>
+
+
+                    <p className="mt-2 text-muted-foreground">
+
+                        No synchronization audit ID was provided.
+
+                    </p>
+
+                </div>
+
+            </AppLayout>
+
         );
 
-
-    if (!audit) {
-        notFound();
     }
 
+
+    /*
+     * ID was supplied but is not valid.
+     */
+
+    if (!isValidAuditId) {
+
+        return (
+
+            <AppLayout>
+
+                <div className="p-6">
+
+                    <h1 className="text-2xl font-bold">
+
+                        Synchronization Details
+
+                    </h1>
+
+
+                    <p className="mt-2 text-muted-foreground">
+
+                        Invalid synchronization audit ID.
+
+                    </p>
+
+                </div>
+
+            </AppLayout>
+
+        );
+
+    }
+
+
+    /*
+     * API request is still running.
+     */
+
+    if (loading) {
+
+        return (
+
+            <AppLayout>
+
+                <div className="p-6">
+
+                    <h1 className="text-2xl font-bold">
+
+                        Synchronization Details
+
+                    </h1>
+
+
+                    <p className="mt-2 text-muted-foreground">
+
+                        Loading synchronization details...
+
+                    </p>
+
+                </div>
+
+            </AppLayout>
+
+        );
+
+    }
+
+
+    /*
+     * Audit was not found.
+     */
+
+    if (!audit) {
+
+        return (
+
+            <AppLayout>
+
+                <div className="p-6">
+
+                    <h1 className="text-2xl font-bold">
+
+                        Synchronization Details
+
+                    </h1>
+
+
+                    <p className="mt-2 text-muted-foreground">
+
+                        Synchronization audit #{auditId} was not found.
+
+                    </p>
+
+                </div>
+
+            </AppLayout>
+
+        );
+
+    }
+
+
+    /*
+     * Audit successfully loaded.
+     */
 
     return (
 
@@ -88,6 +290,7 @@ export default async function SyncHistoryDetailsPage({
             >
 
                 <div className="shrink-0">
+
 
                     <Link
                         href="/sync-history"
@@ -111,11 +314,18 @@ export default async function SyncHistoryDetailsPage({
                     <div className="mt-4">
 
                         <h1 className="text-3xl font-bold">
+
                             Synchronization Details
+
                         </h1>
 
+
                         <p className="text-muted-foreground">
-                            Details of ArcGIS synchronization operation #{audit.id}.
+
+                            Details of ArcGIS synchronization operation #
+
+                            {audit.id}.
+
                         </p>
 
                     </div>
@@ -138,15 +348,20 @@ export default async function SyncHistoryDetailsPage({
                         <CardHeader>
 
                             <CardTitle className="text-sm">
+
                                 Status
+
                             </CardTitle>
 
                         </CardHeader>
 
+
                         <CardContent>
 
                             <div className="text-lg font-semibold">
+
                                 {audit.status}
+
                             </div>
 
                         </CardContent>
@@ -159,15 +374,20 @@ export default async function SyncHistoryDetailsPage({
                         <CardHeader>
 
                             <CardTitle className="text-sm">
+
                                 Created
+
                             </CardTitle>
 
                         </CardHeader>
 
+
                         <CardContent>
 
                             <div className="text-lg font-semibold">
+
                                 {audit.createdCount}
+
                             </div>
 
                         </CardContent>
@@ -180,15 +400,20 @@ export default async function SyncHistoryDetailsPage({
                         <CardHeader>
 
                             <CardTitle className="text-sm">
+
                                 Updated
+
                             </CardTitle>
 
                         </CardHeader>
 
+
                         <CardContent>
 
                             <div className="text-lg font-semibold">
+
                                 {audit.updatedCount}
+
                             </div>
 
                         </CardContent>
@@ -201,15 +426,20 @@ export default async function SyncHistoryDetailsPage({
                         <CardHeader>
 
                             <CardTitle className="text-sm">
+
                                 Failed
+
                             </CardTitle>
 
                         </CardHeader>
 
+
                         <CardContent>
 
                             <div className="text-lg font-semibold">
+
                                 {audit.failedCount}
+
                             </div>
 
                         </CardContent>
@@ -222,15 +452,20 @@ export default async function SyncHistoryDetailsPage({
                         <CardHeader>
 
                             <CardTitle className="text-sm">
+
                                 Ignored
+
                             </CardTitle>
 
                         </CardHeader>
 
+
                         <CardContent>
 
                             <div className="text-lg font-semibold">
+
                                 {audit.ignoredCount}
+
                             </div>
 
                         </CardContent>
@@ -245,13 +480,16 @@ export default async function SyncHistoryDetailsPage({
                     <CardHeader>
 
                         <CardTitle>
+
                             Synchronization Operations
+
                         </CardTitle>
 
                     </CardHeader>
 
 
                     <CardContent className="h-[calc(100%-5rem)]">
+
 
                         {audit.entries.length === 0 ? (
 
@@ -262,7 +500,9 @@ export default async function SyncHistoryDetailsPage({
                                     text-muted-foreground
                                 "
                             >
+
                                 No synchronization operations were recorded.
+
                             </div>
 
                         ) : (
@@ -283,19 +523,30 @@ export default async function SyncHistoryDetailsPage({
                                         <TableRow>
 
                                             <TableHead>
+
                                                 Asset Tag
+
                                             </TableHead>
 
+
                                             <TableHead>
+
                                                 Action
+
                                             </TableHead>
 
+
                                             <TableHead>
+
                                                 Reason
+
                                             </TableHead>
 
+
                                             <TableHead>
+
                                                 Date
+
                                             </TableHead>
 
                                         </TableRow>
@@ -306,6 +557,7 @@ export default async function SyncHistoryDetailsPage({
                                     <TableBody>
 
                                         {audit.entries.map(
+
                                             entry => (
 
                                                 <TableRow
@@ -313,18 +565,28 @@ export default async function SyncHistoryDetailsPage({
                                                 >
 
                                                     <TableCell>
+
                                                         {entry.assetTag}
+
                                                     </TableCell>
 
+
                                                     <TableCell>
+
                                                         {entry.action}
+
                                                     </TableCell>
 
+
                                                     <TableCell>
+
                                                         {entry.reason}
+
                                                     </TableCell>
 
+
                                                     <TableCell>
+
                                                         {new Date(
                                                             entry.createdAt
                                                         ).toLocaleString(
@@ -339,11 +601,13 @@ export default async function SyncHistoryDetailsPage({
                                                                 hour12: true,
                                                             }
                                                         )}
+
                                                     </TableCell>
 
                                                 </TableRow>
 
                                             )
+
                                         )}
 
                                     </TableBody>

@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { getTrees } from "@/services/trees";
 
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -27,11 +29,21 @@ export default async function TreesPage() {
 
                 <div className="shrink-0">
 
-                    <h1 className="text-3xl font-bold">
+                    <h1
+                        className="
+                            text-3xl
+                            font-bold
+                        "
+                    >
                         Trees
                     </h1>
 
-                    <p className="text-muted-foreground">
+
+                    <p
+                        className="
+                            text-muted-foreground
+                        "
+                    >
                         Urban forest tree inventory.
                     </p>
 
@@ -45,12 +57,29 @@ export default async function TreesPage() {
                     "
                 >
 
-                    <TreesPageClient
-                        trees={trees}
-                    />
+                    <Suspense
+                        fallback={
+                            <div
+                                className="
+                                    flex
+                                    h-full
+                                    items-center
+                                    justify-center
+                                    text-muted-foreground
+                                "
+                            >
+                                Loading trees...
+                            </div>
+                        }
+                    >
+
+                        <TreesPageClient
+                            trees={trees}
+                        />
+
+                    </Suspense>
 
                 </div>
-
 
             </div>
 

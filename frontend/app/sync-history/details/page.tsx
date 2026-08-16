@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPageClient } from "@/components/maps/MapPageClient";
+import SyncHistoryDetailsClient from "./SyncHistoryDetailsClient";
 
-export default function MapPage() {
+export default function SyncHistoryDetailsPage() {
     return (
         <AppLayout>
             <Suspense
@@ -17,11 +17,11 @@ export default function MapPage() {
                             text-muted-foreground
                         "
                     >
-                        Loading map...
+                        Loading synchronization details...
                     </div>
                 }
             >
-                <MapPageClient />
+                <SyncHistoryDetailsClient />
             </Suspense>
         </AppLayout>
     );

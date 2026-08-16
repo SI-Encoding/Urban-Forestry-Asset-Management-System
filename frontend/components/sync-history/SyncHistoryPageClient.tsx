@@ -8,11 +8,11 @@ import {
     useRouter,
 } from "next/navigation";
 
-import {
+import type {
     ColumnDef,
 } from "@tanstack/react-table";
 
-import {
+import type {
     SyncAudit,
 } from "@/services/sync-audit";
 
@@ -30,133 +30,174 @@ import {
 
 interface SyncHistoryPageClientProps {
 
-    audits:
-        SyncAudit[];
+    audits: SyncAudit[];
 
 }
 
 
 export function SyncHistoryPageClient({
+
     audits,
+
 }: SyncHistoryPageClientProps) {
+
 
     const router =
         useRouter();
 
 
     const columns =
-        useMemo<ColumnDef<SyncAudit>[]>(() => [
+        useMemo<ColumnDef<SyncAudit>[]>(
 
-            {
-                accessorKey: "startedAt",
+            () => [
 
-                header: "Date",
+                {
+                    accessorKey: "startedAt",
 
-                cell: ({ row }) => {
+                    header: "Date",
 
-                    const date =
-                        new Date(
-                            row.original.startedAt
+                    cell: ({ row }) => {
+
+                        const date =
+                            new Date(
+                                row.original.startedAt
+                            );
+
+
+                        return date.toLocaleString(
+
+                            "en-US",
+
+                            {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                            }
+
                         );
 
-                    return date.toLocaleString(
-                        "en-US",
-                        {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                            second: "2-digit",
-                            hour12: true,
-                        }
-                    );
+                    },
 
                 },
 
-            },
+
+                {
+                    accessorKey: "status",
+
+                    header: "Status",
+
+                },
 
 
-            {
-                accessorKey: "status",
+                {
+                    accessorKey: "createdCount",
 
-                header: "Status",
+                    header: "Created",
 
-            },
+                    cell: ({ row }) => (
 
+                        <div className="text-right">
 
-            {
-                accessorKey: "createdCount",
+                            {
+                                row.original.createdCount
+                            }
 
-                header: "Created",
+                        </div>
 
-                cell: ({ row }) => (
+                    ),
 
-                    <div className="text-right">
-
-                        {row.original.createdCount}
-
-                    </div>
-
-                ),
-
-            },
+                },
 
 
-            {
-                accessorKey: "updatedCount",
+                {
+                    accessorKey: "updatedCount",
 
-                header: "Updated",
+                    header: "Updated",
 
-                cell: ({ row }) => (
+                    cell: ({ row }) => (
 
-                    <div className="text-right">
+                        <div className="text-right">
 
-                        {row.original.updatedCount}
+                            {
+                                row.original.updatedCount
+                            }
 
-                    </div>
+                        </div>
 
-                ),
+                    ),
 
-            },
-
-
-            {
-                accessorKey: "failedCount",
-
-                header: "Failed",
-
-                cell: ({ row }) => (
-
-                    <div className="text-right">
-
-                        {row.original.failedCount}
-
-                    </div>
-
-                ),
-
-            },
+                },
 
 
-            {
-                accessorKey: "ignoredCount",
+                {
+                    accessorKey: "failedCount",
 
-                header: "Ignored",
+                    header: "Failed",
 
-                cell: ({ row }) => (
+                    cell: ({ row }) => (
 
-                    <div className="text-right">
+                        <div className="text-right">
 
-                        {row.original.ignoredCount}
+                            {
+                                row.original.failedCount
+                            }
 
-                    </div>
+                        </div>
 
-                ),
+                    ),
 
-            },
+                },
 
-        ], []);
+
+                {
+                    accessorKey: "ignoredCount",
+
+                    header: "Ignored",
+
+                    cell: ({ row }) => (
+
+                        <div className="text-right">
+
+                            {
+                                row.original.ignoredCount
+                            }
+
+                        </div>
+
+                    ),
+
+                },
+
+            ],
+
+            []
+
+        );
+
+
+    function handleRowClick(
+        audit: SyncAudit
+    ) {
+
+        const auditId =
+            audit.id;
+
+
+        console.log(
+            "Opening sync audit:",
+            auditId
+        );
+
+
+        router.push(
+            `/sync-history/details?id=${auditId}`
+        );
+
+    }
 
 
     return (
@@ -166,13 +207,17 @@ export function SyncHistoryPageClient({
             <CardHeader>
 
                 <CardTitle>
+
                     Synchronization History
+
                 </CardTitle>
 
             </CardHeader>
 
 
-            <CardContent className="h-[calc(100%-5rem)]">
+            <CardContent
+                className="h-[calc(100%-5rem)]"
+            >
 
                 <EntityTable
 
@@ -180,15 +225,13 @@ export function SyncHistoryPageClient({
 
                     data={audits}
 
-                    emptyMessage="No synchronization history found."
+                    emptyMessage={
+                        "No synchronization history found."
+                    }
 
-                    onRowClick={(audit) => {
-
-                        router.push(
-                            `/sync-history/${audit.id}`
-                        );
-
-                    }}
+                    onRowClick={
+                        handleRowClick
+                    }
 
                 />
 
