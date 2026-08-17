@@ -118,6 +118,7 @@ app.MapWorkOrderEndpoints();
 app.MapArcGisEndpoints();
 app.MapArcGisSyncEndpoints();
 app.MapArcGisOAuthEndpoints();
+app.MapAiEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var persistence =

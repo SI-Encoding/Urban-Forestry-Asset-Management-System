@@ -3,41 +3,37 @@
 export type TreeDetailsTab =
     | "overview"
     | "inspections"
-    | "workorders";
+    | "workorders"
+    | "ai";
 
 interface Props {
     active: TreeDetailsTab;
-
-    onChange: (
-        tab: TreeDetailsTab
-    ) => void;
+    onChange: (tab: TreeDetailsTab) => void;
 }
 
 export function TreeDetailsTabs({
     active,
     onChange,
 }: Props) {
-
     const tabs: TreeDetailsTab[] = [
         "overview",
         "inspections",
         "workorders",
+        "ai",
     ];
 
     return (
-
         <div className="mb-6 flex border-b">
-
             {tabs.map((tab) => (
-
                 <button
                     key={tab}
-                    onClick={() =>
-                        onChange(tab)
-                    }
+                    onClick={() => onChange(tab)}
                     className={`
-                        px-4 py-2 text-sm capitalize
-                        border-b-2 transition
+                        px-4 py-2
+                        text-sm
+                        capitalize
+                        border-b-2
+                        transition
 
                         ${
                             active === tab
@@ -50,13 +46,11 @@ export function TreeDetailsTabs({
                         ? "Work Orders"
                         : tab === "overview"
                             ? "Overview"
-                            : "Inspections"}
+                            : tab === "inspections"
+                                ? "Inspections"
+                                : "AI Assessment"}
                 </button>
-
             ))}
-
         </div>
-
     );
-
 }
